@@ -77,9 +77,51 @@ function showProfile() {
   $('#profileGroup').value = profile?.group_name || '';
   $('#profileDarabang').value = profile?.darabang || '';
   $('#profileSoon').value = profile?.soon || '';
-  $('#profileEmail').textContent = user.email || '';
+  $('#profileEmailInput').value = user.email || '';
+  updateEmailChangeState();
   $('#myProfileDetails').textContent = [profile?.cohort && `${profile.cohort}기`, profile?.group_name,
     profile?.darabang, profile?.soon && `${profile.soon}순`].filter(Boolean).join(' · ');
+}
+
+function updateEmailChangeState() {
+  if (!user) return;
+  const pending = localStorage.getItem('linkpray-pending-email-change')?.trim().toLowerCase();
+  const applied = !!(pending && user.email_confirmed_at && user.email?.toLowerCase() === pending);
+  $('#emailReauthBox').classList.toggle('hidden', !applied);
+  $('#emailChangeStatus').textContent = applied
+    ? '새 이메일 인증이 확인됐어요. 비밀번호를 다시 입력해 변경을 확정해 주세요.'
+    : (pending
+      ? `Supabase 이메일 변경 설정에 따라 새 주소와 기존 주소에서 인증을 완료한 뒤 이 화면으로 돌아오세요. (요청: ${pending})`
+      : '이메일을 변경하려면 새 주소로 인증을 완료해 주세요.');
+  $('#confirmEmailChange').disabled = !applied;
+}
+
+async function requestEmailChange() {
+  const email = $('#profileEmailInput').value.trim().toLowerCase();
+  if (!email || !$('#profileEmailInput').checkValidity()) return toast('올바른 이메일 주소를 입력해 주세요.');
+  if (email === user.email?.toLowerCase()) return toast('현재 이메일과 다른 주소를 입력해 주세요.');
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${window.location.origin}${window.location.pathname}` }
+  );
+  if (error) return toast(error.message);
+  localStorage.setItem('linkpray-pending-email-change', email);
+  updateEmailChangeState();
+  toast('인증메일을 보냈어요. 메일 안내에 따라 인증을 완료해 주세요.');
+}
+
+async function confirmEmailChange() {
+  const email = localStorage.getItem('linkpray-pending-email-change')?.trim().toLowerCase();
+  const password = $('#emailReauthPassword').value;
+  if (!email || !password) return toast('계정 비밀번호를 입력해 주세요.');
+  if (!user.email_confirmed_at || user.email?.toLowerCase() !== email) return toast('새 이메일 인증이 아직 완료되지 않았어요.');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return toast('비밀번호를 확인해 주세요.');
+  user = data.user;
+  localStorage.removeItem('linkpray-pending-email-change');
+  $('#emailReauthPassword').value = '';
+  await init();
+  toast('이메일 변경을 확정했어요.');
 }
 
 async function init() {
@@ -106,6 +148,7 @@ async function init() {
   $('#authButton').classList.toggle('hidden', !!user);
   $('#logoutButton').classList.toggle('hidden', !user);
   $('#adminNav').classList.remove('hidden');
+  $('#homeMyStat').classList.toggle('hidden', !user);
   showProfile();
   refreshSignupGate();
   await loadRoom();
@@ -181,6 +224,7 @@ async function loadMine() {
   completedPrayerSeconds = (sessions || []).reduce((sum, session) => sum + Number(session.duration_seconds || 0), 0);
   const liveSeconds = activeSessionId ? Math.floor((Date.now() - activeStartedAt) / 1000) : 0;
   $('#myTotal').textContent = fmt(completedPrayerSeconds + liveSeconds);
+  $('#homeMyTotal').textContent = fmt(completedPrayerSeconds + liveSeconds);
   const { data: topics } = await supabase.from('personal_prayer_topics').select('*')
     .eq('user_id', user.id).order('created_at', { ascending: false });
   $('#myTopics').innerHTML = (topics || []).length ? topics.map(renderPrayerTopic).join('')
@@ -193,10 +237,29 @@ function renderPrayerTopic(topic) {
     ? `<div class="answer-box"><strong>${new Date(topic.responded_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).replace(/\s/g, '')} 기도응답</strong><div>${esc(topic.response_content)}</div></div>`
     : '';
   return `<article class="topic"><small>${created}</small><div>${esc(topic.content)}</div>${response}
-    <button class="response-button" type="button" onclick="window.toggleResponse('${topic.id}')">${topic.response_content ? '응답 수정' : '응답 기록'}</button>
+    <div class="topic-actions"><button class="response-button" type="button" onclick="window.toggleTopicEdit('${topic.id}')">수정</button>
+    <button class="response-button" type="button" onclick="window.deletePrayerTopic('${topic.id}')">삭제</button>
+    <button class="response-button" type="button" onclick="window.toggleResponse('${topic.id}')">${topic.response_content ? '응답 수정' : '응답 기록'}</button></div>
+    <div class="response-editor hidden" id="topic-editor-${topic.id}"><textarea class="field" id="topic-text-${topic.id}">${esc(topic.content)}</textarea><button class="secondary" type="button" onclick="window.savePrayerTopic('${topic.id}')">수정 저장</button></div>
     <div class="response-editor hidden" id="response-editor-${topic.id}"><textarea class="field" id="response-text-${topic.id}" placeholder="기도 응답 내용을 적어주세요.">${esc(topic.response_content || '')}</textarea><button class="secondary" type="button" onclick="window.savePrayerResponse('${topic.id}')">응답 저장</button></div></article>`;
 }
 
+window.toggleTopicEdit = (id) => $(`#topic-editor-${id}`).classList.toggle('hidden');
+window.savePrayerTopic = async (id) => {
+  const content = $(`#topic-text-${id}`).value.trim();
+  if (!content) return toast('기도제목을 입력해 주세요.');
+  const { error } = await supabase.from('personal_prayer_topics').update({ content }).eq('id', id).eq('user_id', user.id);
+  if (error) return toast(error.message);
+  await loadMine();
+  toast('기도제목을 수정했어요.');
+};
+window.deletePrayerTopic = async (id) => {
+  if (!window.confirm('이 기도제목을 삭제할까요?')) return;
+  const { error } = await supabase.from('personal_prayer_topics').delete().eq('id', id).eq('user_id', user.id);
+  if (error) return toast(error.message);
+  await loadMine();
+  toast('기도제목을 삭제했어요.');
+};
 window.toggleResponse = (id) => $(`#response-editor-${id}`).classList.toggle('hidden');
 window.savePrayerResponse = async (id) => {
   const content = $(`#response-text-${id}`).value.trim();
@@ -215,6 +278,7 @@ function startTicker() {
     const elapsed = Math.max(0, Math.floor((Date.now() - activeStartedAt) / 1000));
     $('#timer').textContent = fmt(elapsed);
     $('#myTotal').textContent = fmt(completedPrayerSeconds + elapsed);
+    $('#homeMyTotal').textContent = fmt(completedPrayerSeconds + elapsed);
   };
   update();
   prayerTicker = setInterval(update, 1000);
@@ -223,7 +287,8 @@ function startTicker() {
 async function beginPrayer() {
   if (!user) return window.openAuth('login');
   if (activeSessionId) return;
-  const startedAt = new Date().toISOString();
+  const clickedAt = Date.now();
+  const startedAt = new Date(clickedAt).toISOString();
   const { data: session, error } = await supabase.from('prayer_sessions')
     .insert({ user_id: user.id, started_at: startedAt }).select('id,started_at').single();
   if (error) return toast(error.message);
@@ -237,16 +302,18 @@ async function beginPrayer() {
   }
   activeSessionId = session.id;
   activeStartedAt = Date.parse(session.started_at);
+  if (!Number.isFinite(activeStartedAt)) activeStartedAt = clickedAt;
   $('#startBtn').classList.add('hidden');
   $('#stopBtn').classList.remove('hidden');
   $('#timerHint').textContent = '기도 중 · 기도 마치기를 누르면 시간이 저장됩니다';
+  // Start the visible clock before waiting for the browser's audio permission.
+  startTicker();
   try {
     await $('#audio').play();
     $('#musicHint').textContent = '기도 중 배경음악 재생';
   } catch {
     $('#musicHint').textContent = '브라우저가 자동재생을 막았어요. 음악 재생 버튼을 눌러주세요.';
   }
-  startTicker();
   await refreshPresence();
   toast('기도시간 기록을 시작했어요.');
 }
@@ -444,6 +511,8 @@ $('#loginForm').addEventListener('submit', login);
 $('#reauthForm').addEventListener('submit', reauthenticate);
 $('#closeReauth').addEventListener('click', () => $('#reauthModal').classList.remove('open'));
 $('#profileForm').addEventListener('submit', saveProfile);
+$('#requestEmailChange').addEventListener('click', requestEmailChange);
+$('#confirmEmailChange').addEventListener('click', confirmEmailChange);
 $('#saveTopic').addEventListener('click', saveTopic);
 $('#startBtn').addEventListener('click', beginPrayer);
 $('#stopBtn').addEventListener('click', stopPrayer);
