@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+let createClient = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -689,9 +689,9 @@ async function loadAdminData() {
   if (topicsError) { personalEl.innerHTML = `<div class="empty">${esc(topicsError.message)}</div>`; return; }
   if (!topics?.length) { personalEl.innerHTML = '<div class="empty">등록된 개인 기도제목이 없어요.</div>'; return; }
   const ids = [...new Set(topics.map((item) => item.user_id))];
-  const { data: members, error: membersError } = await supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').in('id', ids);
+  const { data: personalMembers, error: membersError } = await supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').in('id', ids);
   if (membersError) { personalEl.innerHTML = `<div class="empty">${esc(membersError.message)}</div>`; return; }
-  const memberById = new Map((members || []).map((member) => [member.id, member]));
+  const memberById = new Map((personalMembers || []).map((member) => [member.id, member]));
   personalEl.innerHTML = topics.map((item) => {
     const member = memberById.get(item.user_id) || {};
     const metadata = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
@@ -863,6 +863,7 @@ supabase?.auth.onAuthStateChange((event) => {
 });
 
 try {
+  ({ createClient } = await import('https://esm.sh/@supabase/supabase-js@2'));
   const response = await fetch('/.netlify/functions/config');
   const config = response.ok ? await response.json() : null;
   if (config?.url && config?.anonKey) {
@@ -872,6 +873,9 @@ try {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') setTimeout(init, 0);
     });
   }
-} catch { /* The static preview can still render without backend configuration. */ }
+} catch (error) {
+  console.error('Prayer room startup failed:', error);
+  toast('사이트 기능을 불러오지 못했어요. 인터넷 연결과 배포 파일을 확인해 주세요.');
+}
 if (supabase) await init();
 else console.warn('Supabase config function did not return a URL and anon key.');

@@ -1,34 +1,903 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#18392f"><title>2027 LINK PRAY ROOM</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap');:root{--green:#18392f;--deep:#122b24;--sage:#a6b9a5;--cream:#f6f3eb;--ink:#23332d;--muted:#7e8981;--line:#e4e5dc;--gold:#d7b878}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:'DM Sans','Noto Serif KR',sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}.top{height:72px;padding:0 max(5vw,24px);display:flex;align-items:center;justify-content:space-between;background:#f6f3ebee;border-bottom:1px solid #e8e6dd;position:sticky;top:0;z-index:5}.brand{display:flex;gap:11px;align-items:center;font-size:12px;letter-spacing:.14em;font-weight:700;color:var(--green)}.mark{width:31px;height:31px;border-radius:50%;background:var(--green);color:#f7f3e8;display:grid;place-items:center;font-family:serif;font-size:17px}.nav{display:flex;gap:5px;align-items:center}.nav button,.textbtn{border:0;background:transparent;color:#66746a;padding:10px 14px;border-radius:30px;font-size:13px}.nav button.active{background:#e8ebe3;color:var(--green);font-weight:700}.nav .login{color:var(--green);font-weight:700;border:1px solid #d9ded4}.page{display:none}.page.active{display:block}.hero{min-height:620px;background:linear-gradient(90deg,#0e261edb,#132f2575),radial-gradient(ellipse at 75% 30%,#8b9874,#405c49 35%,#19382e 75%);color:#fff;display:flex;align-items:center;padding:80px max(9vw,30px);position:relative;overflow:hidden}.hero:after{content:'✳';position:absolute;right:12%;top:5%;font-size:360px;color:#ffffff08;font-family:serif}.hero-inner{max-width:650px;position:relative;z-index:1}.eyebrow{font-size:11px;letter-spacing:.25em;color:#d1c195;font-weight:600}.hero h1{font:500 clamp(42px,7vw,78px)/1.13 'Noto Serif KR',serif;letter-spacing:-.055em;margin:23px 0 18px}.hero p{font-size:15px;line-height:1.9;color:#e2e7df}.primary{background:var(--gold);color:#23342b;border:0;border-radius:4px;padding:15px 23px;font-size:14px;font-weight:700;margin-top:22px}.primary:disabled{opacity:.55;cursor:wait}.arrow{margin-left:22px}.stats{display:flex;gap:36px;margin-top:62px}.stat b{display:block;font-size:22px;font-weight:500}.stat span{font-size:10px;letter-spacing:.16em;color:#c4d0c3}.quote{padding:72px 24px;text-align:center;color:#42574a}.quote blockquote{font:400 22px/1.8 'Noto Serif KR',serif;margin:0 auto 15px}.quote small{letter-spacing:.12em;color:#899187}.shell{max-width:1080px;margin:auto;padding:54px 24px 90px}.heading{text-align:center;margin-bottom:34px}.heading .eyebrow{color:#a4854d}.heading h2{font:500 35px 'Noto Serif KR',serif;margin:12px 0}.heading p{font-size:13px;color:var(--muted)}.room-grid{display:grid;grid-template-columns:1.35fr .8fr;gap:20px}.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:28px}.prayer-card{background:linear-gradient(145deg,#1b3b30,#29483a);color:#f5f3eb;min-height:280px;display:flex;flex-direction:column;justify-content:space-between}.prayer-card .label{font-size:10px;letter-spacing:.2em;color:#d3c08d}.prayer-card h3{font:400 25px/1.7 'Noto Serif KR',serif;max-width:540px;margin:22px 0}.prayer-card p{font-size:12px;color:#c5d0c5}.room-side h3,.card h3{font:500 17px 'Noto Serif KR',serif;margin:0 0 19px}.people{display:flex;flex-direction:column;gap:13px}.person{display:flex;align-items:center;gap:10px;font-size:13px}.dot{width:7px;height:7px;background:#80a782;border-radius:50%;box-shadow:0 0 0 4px #eaf1e9}.pill{margin-left:auto;font-size:10px;color:#839087}.empty{font-size:12px;color:var(--muted);padding:12px 0}.timer{text-align:center;padding:22px 0}.timer strong{font-size:30px;font-weight:500;letter-spacing:.08em;color:var(--green)}.timer small{display:block;color:var(--muted);font-size:11px;margin-top:8px}.actions{display:flex;gap:10px;justify-content:center}.actions .primary{margin:0;padding:12px 20px}.secondary{background:#f1f2ed;color:#3b5547;border:1px solid #e4e7de;border-radius:4px;padding:12px 18px}.music{margin-top:20px;padding:15px 17px;background:#f6f6f1;border-radius:5px;display:flex;align-items:center;gap:12px;font-size:12px;color:#506053}.music audio{width:100%;height:34px}.music small{display:block;color:#899187;margin-top:4px}.profile-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:20px}.profile-name{font:500 24px 'Noto Serif KR',serif}.bigtime{font-size:40px;color:var(--green);margin:22px 0 5px}.field{width:100%;border:1px solid var(--line);background:#fbfbf8;padding:13px;border-radius:4px;margin:7px 0 13px;color:var(--ink)}textarea.field{height:105px;resize:vertical}.topic{padding:14px;border:1px solid var(--line);border-radius:5px;margin:10px 0;font-size:13px;line-height:1.7}.topic small{display:block;color:#9a8a68;font-size:10px;margin-bottom:5px}.footer{background:var(--deep);color:#b8c4b9;text-align:center;padding:30px 20px;font-size:10px;letter-spacing:.13em}.modal{position:fixed;inset:0;z-index:20;background:#11261ecc;display:none;align-items:center;justify-content:center;padding:18px}.modal.open{display:flex}.modal-card{width:min(540px,100%);max-height:92vh;overflow:auto;background:var(--cream);padding:30px;border-radius:8px;box-shadow:0 18px 80px #0004}.modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h2{font:500 25px 'Noto Serif KR',serif;margin:0}.close{background:none;border:0;font-size:25px;color:#617067}.tabs{display:flex;gap:6px;margin:20px 0}.tabs button{flex:1;padding:11px;background:#eceee7;border:0;border-radius:4px;color:#617067}.tabs button.active{background:var(--green);color:white}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.formgrid label,.loginform label{display:block;font-size:11px;color:#68756c}.formgrid input,.loginform input{display:block;width:100%;padding:12px;border:1px solid var(--line);background:white;border-radius:4px;margin:6px 0 13px}.loginform{display:none}.loginform.active{display:block}.formgrid[hidden]{display:none}.modal .primary{width:100%;margin:10px 0 0}.hint{font-size:11px;color:#818a82;line-height:1.7}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#213b30;color:white;padding:12px 18px;border-radius:5px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:30}.toast.show{opacity:1}.adminbox{max-width:650px;margin:20px auto}.adminbox p{font-size:12px;color:var(--muted);line-height:1.8}.adminbox input[type=file]{display:block;margin:15px 0}.hidden{display:none!important}@media(max-width:700px){.top{height:62px;padding:0 13px}.brand{font-size:9px;letter-spacing:.1em}.mark{width:27px;height:27px}.nav{gap:0}.nav button{padding:9px 8px;font-size:10px}.hero{min-height:570px;padding:55px 25px}.hero h1{font-size:47px}.stats{gap:22px}.room-grid,.profile-grid{grid-template-columns:1fr}.shell{padding:43px 15px 70px}.card{padding:21px}.formgrid{grid-template-columns:1fr}.modal-card{padding:22px}}
-</style></head><body>
-<header class="top"><div class="brand"><span class="mark">✳</span> 2027&nbsp; LINK PRAY ROOM</div><nav class="nav"><button class="active" data-page="home">홈</button><button data-page="room">기도실</button><button data-page="mypage">마이페이지</button><button id="authButton" class="login">로그인</button><button id="logoutButton" class="login hidden">로그아웃</button><button id="adminNav" class="hidden" data-page="admin">관리자</button></nav></header>
-<main><section id="home" class="page active"><div class="hero"><div class="hero-inner"><div class="eyebrow">A SPACE TO PRAY · 24 HOURS</div><h1>2027<br>LINK PRAY ROOM</h1><p>기도로 연결되는 우리.<br>언제든 이곳에 머물며 함께 기도해요.</p><button class="primary" id="goRoom">기도하러가기 <span class="arrow">→</span></button><div class="stats"><div class="stat"><b id="homeTotal">00:00:00</b><span>TOGETHER IN PRAYER</span></div><div class="stat"><b id="homeCount">0</b><span>PRAYING NOW</span></div></div></div></div><div class="quote"><blockquote>“쉬지 말고 기도하라.”</blockquote><small>데살로니가전서 5:17</small></div><footer class="footer">2027 LINK PRAY ROOM · 기도로 이어지는 하루</footer></section>
-<section id="room" class="page"><div class="shell"><div class="heading"><div class="eyebrow">THE PRAYER ROOM</div><h2>지금, 함께 기도해요</h2><p>기도할 자리를 찾는 누구에게나 열려 있는 공간입니다.</p></div><div class="room-grid"><div><div class="card prayer-card"><div class="label">TODAY'S PRAYER</div><div><h3 id="roomTopic">주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.</h3><p id="topicBy">기도제목을 마음에 담고 잠시 머물러 보세요.</p></div><div class="label">2027 LINK PRAY</div></div><div class="card" style="margin-top:18px;text-align:center"><div class="timer"><strong id="timer">00:00:00</strong><small id="timerHint">로그인 후 기도를 시작할 수 있어요</small></div><div class="actions"><button class="primary" id="startBtn">기도 시작</button><button class="secondary hidden" id="stopBtn">기도 마치기</button></div><div class="music"><span style="font-size:18px">♫</span><div style="flex:1"><b id="musicName">배경음악</b><small id="musicHint">재생 버튼을 눌러 음악을 들어보세요</small></div><audio id="audio" controls loop></audio></div></div></div><aside class="card room-side"><h3>함께 기도하는 사람 <span class="pill" id="countLabel">0명</span></h3><div id="people" class="people"><div class="empty">불러오는 중…</div></div><div class="topic" style="margin-top:25px;background:#f8f8f3"><small>함께하는 기도</small>각자의 자리에서 드리는 기도가 하나로 이어집니다.</div></aside></div></div></section>
-<section id="mypage" class="page"><div class="shell"><div class="heading"><div class="eyebrow">MY PRAYER JOURNEY</div><h2>마이페이지</h2><p>나의 기도 여정과 마음에 품은 기도제목을 기록해요.</p></div><div id="signedOut" class="card" style="text-align:center">마이페이지를 보려면 로그인해 주세요.<br><button class="primary" onclick="openAuth('login')">로그인</button></div><div id="myContent" class="profile-grid hidden"><div class="card"><div style="font-size:11px;color:#a4854d;letter-spacing:.15em">MY PROFILE</div><div class="profile-name" style="margin-top:13px"><span id="myName">기도자</span>님</div><input id="nameInput" class="field" placeholder="화면에 표시할 이름"><button class="secondary" id="saveName">이름 저장</button><div class="bigtime" id="myTotal">00:00:00</div><div style="font-size:11px;color:#899187">나의 누적 기도시간</div><div id="myProfileDetails" class="hint" style="margin-top:16px"></div></div><div class="card"><h3>나의 기도제목</h3><p style="font-size:12px;color:#818a82">나만 볼 수 있는 기도제목을 기록해요.</p><textarea id="myTopicInput" class="field" placeholder="마음에 품고 있는 기도제목을 적어주세요."></textarea><button class="primary" id="saveTopic" style="margin:0">기도제목 저장</button><div id="myTopics" style="margin-top:20px"></div></div></div></div></section>
-<section id="admin" class="page"><div class="shell"><div class="heading"><div class="eyebrow">ROOM SETTINGS</div><h2>관리자 설정</h2><p>기도실의 공통 기도제목과 배경음악을 관리합니다.</p></div><div class="card adminbox"><label>공통 기도제목<textarea class="field" id="adminTopic" placeholder="모두가 함께 기도할 제목"></textarea></label><button class="secondary" id="saveAdminTopic">기도제목 게시</button><hr style="border:0;border-top:1px solid var(--line);margin:25px 0"><h3>배경음악 파일</h3><p>사용 허가를 받은 음원 파일을 올리면 기도실 플레이어에 표시됩니다. 방문자가 각자 재생을 시작합니다.</p><input type="file" id="audioFile" accept="audio/*"><div id="uploadStatus" class="hint"></div></div></div></section></main>
-<div id="authModal" class="modal"><div class="modal-card"><div class="modal-head"><h2>기도실에 함께하기</h2><button class="close" id="closeModal">×</button></div><div class="tabs"><button class="active" data-auth-tab="login">로그인</button><button data-auth-tab="signup">회원가입</button></div><form id="loginForm" class="loginform active"><label>연락처 또는 이메일<input name="identifier" autocomplete="username" placeholder="01012345678 또는 you@example.com" required></label><label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label><button class="primary">로그인</button><p class="hint">연락처 로그인은 가입 시 등록한 연락처를 사용합니다.</p></form><form id="signupForm" class="loginform"><div class="formgrid"><label>연락처<input name="phone" type="tel" autocomplete="tel" placeholder="01012345678" required></label><label>이메일<input name="email" type="email" autocomplete="email" required></label><label>이름<input name="name" autocomplete="name" required></label><label>기수<input name="cohort" required></label><label>그룹<input name="group_name" required></label><label>다락방<input name="darabang" required></label><label>순<input name="soon" required></label><label>비밀번호<input name="password" type="password" autocomplete="new-password" minlength="8" required></label></div><p class="hint">가입 후 이메일 인증을 완료해야 로그인할 수 있습니다. 연락처는 중복 확인을 위해 저장됩니다.</p><button class="primary">회원가입</button></form></div></div><div class="toast" id="toast"></div>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap');:root{--green:#18392f;--deep:#122b24;--sage:#a6b9a5;--cream:#f6f3eb;--ink:#23332d;--muted:#7e8981;--line:#e4e5dc;--gold:#d7b878}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:'DM Sans','Noto Serif KR',sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}.top{height:72px;padding:0 max(5vw,24px);display:flex;align-items:center;justify-content:space-between;background:#f6f3ebee;border-bottom:1px solid #e8e6dd;position:sticky;top:0;z-index:5}.brand{display:flex;gap:11px;align-items:center;font-size:12px;letter-spacing:.14em;font-weight:700;color:var(--green)}.mark{width:31px;height:31px;border-radius:50%;background:var(--green);color:#f7f3e8;display:grid;place-items:center;font-family:serif;font-size:17px}.nav{display:flex;gap:5px;align-items:center}.nav button,.textbtn{border:0;background:transparent;color:#66746a;padding:10px 14px;border-radius:30px;font-size:13px}.nav button.active{background:#e8ebe3;color:var(--green);font-weight:700}.nav .login{color:var(--green);font-weight:700;border:1px solid #d9ded4}.page{display:none}.page.active{display:block}.hero{min-height:620px;background:linear-gradient(90deg,#0e261edb,#132f2575),radial-gradient(ellipse at 75% 30%,#8b9874,#405c49 35%,#19382e 75%);color:#fff;display:flex;align-items:center;padding:80px max(9vw,30px);position:relative;overflow:hidden}.hero:after{content:'✳';position:absolute;right:12%;top:5%;font-size:360px;color:#ffffff08;font-family:serif}.hero-inner{max-width:650px;position:relative;z-index:1}.eyebrow{font-size:11px;letter-spacing:.25em;color:#d1c195;font-weight:600}.hero h1{font:500 clamp(42px,7vw,78px)/1.13 'Noto Serif KR',serif;letter-spacing:-.055em;margin:23px 0 18px}.hero p{font-size:15px;line-height:1.9;color:#e2e7df}.primary{background:var(--gold);color:#23342b;border:0;border-radius:4px;padding:15px 23px;font-size:14px;font-weight:700;margin-top:22px}.primary:disabled{opacity:.55;cursor:wait}.arrow{margin-left:22px}.stats{display:flex;gap:36px;margin-top:62px}.stat b{display:block;font-size:22px;font-weight:500}.stat span{font-size:10px;letter-spacing:.16em;color:#c4d0c3}.quote{padding:72px 24px;text-align:center;color:#42574a}.quote blockquote{font:400 22px/1.8 'Noto Serif KR',serif;margin:0 auto 15px}.quote small{letter-spacing:.12em;color:#899187}.shell{max-width:1080px;margin:auto;padding:54px 24px 90px}.heading{text-align:center;margin-bottom:34px}.heading .eyebrow{color:#a4854d}.heading h2{font:500 35px 'Noto Serif KR',serif;margin:12px 0}.heading p{font-size:13px;color:var(--muted)}.room-grid{display:grid;grid-template-columns:1.35fr .8fr;gap:20px}.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:28px}.prayer-card{background:linear-gradient(145deg,#1b3b30,#29483a);color:#f5f3eb;min-height:280px;display:flex;flex-direction:column;justify-content:space-between}.prayer-card .label{font-size:10px;letter-spacing:.2em;color:#d3c08d}.prayer-card h3{font:400 25px/1.7 'Noto Serif KR',serif;max-width:540px;margin:22px 0}.prayer-card p{font-size:12px;color:#c5d0c5}.room-side h3,.card h3{font:500 17px 'Noto Serif KR',serif;margin:0 0 19px}.people{display:flex;flex-direction:column;gap:13px}.person{display:flex;align-items:center;gap:10px;font-size:13px}.dot{width:7px;height:7px;background:#80a782;border-radius:50%;box-shadow:0 0 0 4px #eaf1e9}.pill{margin-left:auto;font-size:10px;color:#839087}.empty{font-size:12px;color:var(--muted);padding:12px 0}.timer{text-align:center;padding:22px 0}.timer strong{font-size:30px;font-weight:500;letter-spacing:.08em;color:var(--green)}.timer small{display:block;color:var(--muted);font-size:11px;margin-top:8px}.actions{display:flex;gap:10px;justify-content:center}.actions .primary{margin:0;padding:12px 20px}.secondary{background:#f1f2ed;color:#3b5547;border:1px solid #e4e7de;border-radius:4px;padding:12px 18px}.music{margin-top:20px;padding:15px 17px;background:#f6f6f1;border-radius:5px;display:flex;align-items:center;gap:12px;font-size:12px;color:#506053}.music audio{width:100%;height:34px}.music small{display:block;color:#899187;margin-top:4px}.profile-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:20px}.profile-name{font:500 24px 'Noto Serif KR',serif}.bigtime{font-size:40px;color:var(--green);margin:22px 0 5px}.field{width:100%;border:1px solid var(--line);background:#fbfbf8;padding:13px;border-radius:4px;margin:7px 0 13px;color:var(--ink)}textarea.field{height:105px;resize:vertical}.topic{padding:14px;border:1px solid var(--line);border-radius:5px;margin:10px 0;font-size:13px;line-height:1.7}.topic small{display:block;color:#9a8a68;font-size:10px;margin-bottom:5px}.footer{background:var(--deep);color:#b8c4b9;text-align:center;padding:30px 20px;font-size:10px;letter-spacing:.13em}.modal{position:fixed;inset:0;z-index:20;background:#11261ecc;display:none;align-items:center;justify-content:center;padding:18px}.modal.open{display:flex}.modal-card{width:min(540px,100%);max-height:92vh;overflow:auto;background:var(--cream);padding:30px;border-radius:8px;box-shadow:0 18px 80px #0004}.modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h2{font:500 25px 'Noto Serif KR',serif;margin:0}.close{background:none;border:0;font-size:25px;color:#617067}.tabs{display:flex;gap:6px;margin:20px 0}.tabs button{flex:1;padding:11px;background:#eceee7;border:0;border-radius:4px;color:#617067}.tabs button.active{background:var(--green);color:white}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.formgrid label,.loginform label{display:block;font-size:11px;color:#68756c}.formgrid input,.loginform input{display:block;width:100%;padding:12px;border:1px solid var(--line);background:white;border-radius:4px;margin:6px 0 13px}.loginform{display:none}.loginform.active{display:block}.formgrid[hidden]{display:none}.modal .primary{width:100%;margin:10px 0 0}.hint{font-size:11px;color:#818a82;line-height:1.7}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#213b30;color:white;padding:12px 18px;border-radius:5px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:30}.toast.show{opacity:1}.adminbox{max-width:650px;margin:20px auto}.adminbox p{font-size:12px;color:var(--muted);line-height:1.8}.adminbox input[type=file]{display:block;margin:15px 0}.hidden{display:none!important}.profile-label{display:block;font-size:11px;color:#68756c}.answer-box{margin-top:13px;padding:13px;background:#f4f4ee;border:1px solid #e6e7df;border-radius:4px;color:#59655c}.answer-box strong{display:block;font-size:11px;color:#7f8b7e;margin-bottom:6px}.response-button{border:0;background:transparent;color:#55725f;padding:8px 0 0;font-size:11px}.response-editor{margin-top:10px}.topic-actions{display:flex;gap:14px;margin-top:5px}.topic-actions .response-button{padding:8px 0}.topic-actions .response-button:hover{text-decoration:underline}@media(max-width:700px){.top{height:62px;padding:0 13px}.brand{font-size:9px;letter-spacing:.1em}.mark{width:27px;height:27px}.nav{gap:0}.nav button{padding:9px 8px;font-size:10px}.hero{min-height:570px;padding:55px 25px}.hero h1{font-size:47px}.stats{gap:22px}.room-grid,.profile-grid{grid-template-columns:1fr}.shell{padding:43px 15px 70px}.card{padding:21px}.formgrid{grid-template-columns:1fr}.modal-card{padding:22px}}
+</style><style>.music{display:flex;flex-wrap:nowrap;align-items:center}.music>span{flex:0 0 auto}.music>div{flex:1 1 180px;min-width:100px}.music audio{flex:1 1 240px;width:auto;min-width:180px}@media(max-width:700px){.music{flex-wrap:wrap}.music>div{flex:1 1 120px}.music audio{flex:1 1 calc(100% - 27px);width:calc(100% - 27px);min-width:0;margin-left:27px}}</style><style>.music{display:flex;flex-wrap:nowrap;align-items:center}.music>span{flex:0 0 auto}.music>div{flex:1 1 180px;min-width:100px}.music audio{flex:1 1 240px;width:auto;min-width:180px}@media(max-width:700px){.music{flex-wrap:wrap}.music>div{flex:1 1 120px}.music audio{flex:1 1 calc(100% - 27px);width:calc(100% - 27px);min-width:0;margin-left:27px}}</style><style>.youtube-wrap{margin-top:14px;border-radius:5px;overflow:hidden;background:#111}.youtube-wrap iframe{display:block;width:100%;min-height:200px;aspect-ratio:16/9;border:0}.admin-global-total{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:12px}.admin-global-total strong{font-size:18px;color:var(--green)}.admin-person-row{display:grid;grid-template-columns:minmax(120px,1fr) auto auto;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.admin-person-row>div{min-width:0}.admin-person-row b,.admin-person-row small{display:block}.admin-person-row b{font-size:12px}.admin-person-row small{font-size:10px;color:var(--muted);margin-top:4px}.admin-person-row>strong{font-size:12px;white-space:nowrap}.admin-person-row button{padding:8px 10px;font-size:11px;white-space:nowrap}@media(max-width:700px){.top{height:auto;min-height:62px;flex-wrap:wrap;gap:8px;padding:10px 13px}.brand{font-size:9px;letter-spacing:.1em}.nav{width:100%;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav button{flex:0 0 auto;white-space:nowrap}.hero .stats{flex-wrap:wrap}.adminbox{padding:18px}.admin-person-row{grid-template-columns:minmax(0,1fr) auto;gap:9px}.admin-person-row>div{grid-column:1/3}.admin-person-row button{width:100%}.youtube-wrap iframe{min-height:200px}}</style><style>@media(max-width:700px){.top{height:auto;min-height:60px;flex-wrap:wrap;gap:8px;padding:10px 12px}.brand{font-size:10px;letter-spacing:.08em}.nav{width:100%;overflow-x:auto;justify-content:flex-start;gap:3px;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav button{flex:0 0 auto;min-height:42px;padding:10px 12px;font-size:12px;white-space:nowrap}.hero{min-height:calc(100svh - 106px);padding:48px 22px}.hero h1{font-size:clamp(40px,12vw,56px)}.hero p{font-size:14px}.hero:after{right:-18%;font-size:240px}.stats{gap:18px;margin-top:42px}.stat{min-width:105px}.stat b{font-size:19px}.shell{padding:32px 14px 54px}.heading{margin-bottom:23px}.heading h2{font-size:29px}.heading p{line-height:1.7}.room-grid,.profile-grid{grid-template-columns:minmax(0,1fr);gap:14px}.card{padding:18px}.prayer-card{min-height:240px}.prayer-card h3{font-size:21px;line-height:1.65}.actions{gap:8px}.actions button{flex:1;min-height:48px;padding:12px 8px!important}.timer strong{font-size:28px}.music{flex-wrap:wrap;gap:10px}.music>div{flex:1 1 calc(100% - 40px);min-width:0}.music audio{width:100%;min-width:0}.youtube-wrap{width:100%}.adminbox{margin:0;padding:18px}.admin-person-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}.admin-person-row>div{grid-column:1/3}.admin-person-row button{width:100%;min-height:42px}.formgrid{grid-template-columns:1fr}.field{font-size:16px;padding:13px}.modal{padding:10px;align-items:flex-end}.modal-card{width:100%;max-height:92svh;padding:20px;border-radius:12px 12px 6px 6px}.modal-head h2{font-size:22px}.modal .primary,.modal .secondary{min-height:46px}.footer{padding:24px 14px;line-height:1.7}.toast{width:calc(100% - 28px);bottom:14px;text-align:center}.topic{overflow-wrap:anywhere}.profile-details{line-height:1.8}.signed-out{text-align:center}}@media(min-width:701px) and (max-width:900px){.top{padding:0 20px}.nav button{padding:9px 10px}.shell{padding-right:20px;padding-left:20px}.room-grid{grid-template-columns:1.1fr .9fr}}</style></head><body>
+<header class="top"><div class="brand"><span class="mark">✳</span> 2027&nbsp; LINK PRAY ROOM</div><nav class="nav"><button class="active" data-page="home">홈</button><button data-page="room">기도실</button><button data-page="mypage">마이페이지</button><button id="authButton" class="login">로그인</button><button id="logoutButton" class="login hidden">로그아웃</button><button id="adminNav" data-page="admin">관리자</button></nav></header>
+<main><section id="home" class="page active"><div class="hero"><div class="hero-inner"><div class="eyebrow">A SPACE TO PRAY · 24 HOURS</div><h1>2027<br>LINK PRAY ROOM</h1><p>기도로 연결되는 우리.<br>언제든 이곳에 머물며 함께 기도해요.</p><button class="primary" id="goRoom">기도하러가기 <span class="arrow">→</span></button><div class="stats"><div class="stat"><b id="homeTotal">00:00:00</b><span>TOGETHER IN PRAYER</span></div><div id="homeMyStat" class="stat hidden"><b id="homeMyTotal">00:00:00</b><span>MY PRAYER TIME</span></div><div class="stat"><b id="homeCount">0</b><span>PRAYING NOW</span></div></div></div></div><div class="quote"><blockquote>“쉬지 말고 기도하라.”</blockquote><small>데살로니가전서 5:17</small></div><footer class="footer">2027 LINK PRAY ROOM · 기도로 이어지는 하루</footer></section>
+<section id="room" class="page"><div class="shell"><div class="heading"><div class="eyebrow">THE PRAYER ROOM</div><h2>지금, 함께 기도해요</h2><p>기도할 자리를 찾는 누구에게나 열려 있는 공간입니다.</p></div><div class="room-grid"><div><div class="card prayer-card"><div class="label">TODAY'S PRAYER</div><div><h3 id="roomTopic">주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.</h3><p id="topicBy">기도제목을 마음에 담고 잠시 머물러 보세요.</p></div><div class="label">2027 LINK PRAY</div></div><div class="card" style="margin-top:18px;text-align:center"><div class="timer"><strong id="timer">00:00:00</strong><small id="timerHint">로그인 후 기도를 시작할 수 있어요</small></div><div class="actions"><button class="primary" id="startBtn">기도 시작</button><button class="secondary hidden" id="stopBtn">기도 마치기</button></div><div class="music"><span style="font-size:18px">♫</span><div><b id="musicName">배경음악</b></div><audio id="audio" controls loop></audio></div><div id="youtubeWrap" class="youtube-wrap hidden"><iframe id="youtubePlayer" title="배경음악 YouTube player" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div></div></div><aside class="card room-side"><h3>기도실에 함께 있는 사람 <span class="pill" id="countLabel">0명</span></h3><div id="people" class="people"><div class="empty">불러오는 중…</div></div><div class="topic" style="margin-top:25px;background:#f8f8f3"><small>함께하는 기도</small>각자의 자리에서 드리는 기도가 하나로 이어집니다.</div></aside></div></div></section>
+<section id="mypage" class="page"><div class="shell"><div class="heading"><div class="eyebrow">MY PRAYER JOURNEY</div><h2>마이페이지</h2><p>나의 기도 여정과 기도제목을 기록해요.</p></div><div id="signedOut" class="card signed-out">마이페이지를 보려면 로그인해 주세요.<br><button class="primary" onclick="openAuth('login')">로그인</button></div><div id="myContent" class="profile-grid hidden"><div class="card"><div class="profile-name"><span id="myName">기도자</span>님</div><div class="bigtime" id="myTotal">00:00:00</div><div class="hint">나의 누적 기도시간</div><div id="myProfileDetails" class="hint profile-details"></div><form id="profileForm"><h3>회원정보</h3><label class="profile-label">이름<input id="profileName" class="field" required></label><label class="profile-label">휴대폰 번호<input id="profilePhone" class="field" type="tel" inputmode="numeric" placeholder="010-0000-0000" required></label><label class="profile-label">기수<input id="profileCohort" class="field" required></label><label class="profile-label">그룹<input id="profileGroup" class="field" required></label><label class="profile-label">다락방<input id="profileDarabang" class="field" required></label><label class="profile-label">순<input id="profileSoon" class="field" required></label><button class="secondary" type="submit">회원정보 저장</button></form><hr><h3>이메일 변경</h3><label class="profile-label">이메일<input id="profileEmailInput" class="field" type="email" required></label><button class="secondary" id="requestEmailChange" type="button">변경 인증메일 보내기</button><p class="hint" id="emailChangeStatus">새 이메일 인증 후 비밀번호를 입력해 변경을 확정해 주세요.</p><div id="emailReauthBox" class="hidden"><label class="profile-label">현재 비밀번호<input id="emailReauthPassword" class="field" type="password" autocomplete="current-password"></label><button class="secondary" id="confirmEmailChange" type="button">이메일 변경 확정</button></div></div><div class="card"><h3>나의 기도제목</h3><p class="hint">나만 볼 수 있는 기도제목을 기록해요.</p><textarea id="myTopicInput" class="field" placeholder="나의 기도제목을 적어주세요."></textarea><button class="primary" id="saveTopic" type="button">기도제목 저장</button><div id="myTopics" class="topic-list"></div></div></div></div></section>
+<section id="admin" class="page"><div class="shell"><div class="heading"><div class="eyebrow">ROOM SETTINGS</div><h2>관리자 설정</h2><p>기도실의 공통 기도제목과 배경음악을 관리합니다.</p></div><div class="card adminbox"><div class="admin-tools"><h3>기도시간 초기화</h3><p>전체 또는 회원별 기도시간을 초기화합니다. 진행 중인 기도는 초기화 시각부터 다시 계산됩니다.</p><button class="secondary" id="resetAllPrayerTime" type="button">전체 기도시간 초기화</button><div id="adminPrayerTotals" style="margin-top:14px"><div class="empty">관리자 메뉴에서 불러옵니다.</div></div></div><hr style="border:0;border-top:1px solid var(--line);margin:25px 0"><label>공통 기도제목<textarea class="field" id="adminTopic" placeholder="모두가 함께 기도할 제목"></textarea></label><button class="secondary" id="saveAdminTopic">기도제목 게시</button><div style="margin-top:24px"><h3>공통 기도제목 기록</h3><div id="adminPrayerHistory"><div class="empty">관리자 메뉴에서 불러옵니다.</div></div></div><hr style="border:0;border-top:1px solid var(--line);margin:25px 0"><h3>회원 개인 기도제목</h3><p>관리자 전용으로 회원이 등록한 기도제목과 기록된 응답을 확인합니다.</p><div id="adminPersonalTopics"><div class="empty">관리자 메뉴에서 불러옵니다.</div></div><hr style="border:0;border-top:1px solid var(--line);margin:25px 0"><h3>배경음악</h3><p>음원 파일을 올리거나 YouTube 영상 링크를 등록할 수 있습니다. 마지막으로 설정한 방식 하나만 재생됩니다. 기도 시작 버튼을 누르면 재생돼요.</p><label class="profile-label">YouTube 영상 링크<input id="youtubeUrl" class="field" type="url" placeholder="https://www.youtube.com/watch?v=..."></label><button class="secondary" id="saveYoutubeLink" type="button">YouTube 링크 사용</button><div id="uploadStatus" class="hint" style="margin:10px 0"></div><label class="profile-label" style="margin-top:18px">또는 음원 파일 업로드<input type="file" id="audioFile" accept="audio/*"></label></div></div></section></main>
+<div id="authModal" class="modal"><div class="modal-card"><div class="modal-head"><h2>기도실에 함께하기</h2><button class="close" id="closeModal">×</button></div><div class="tabs"><button class="active" data-auth-tab="login">로그인</button><button data-auth-tab="signup">회원가입</button></div><form id="loginForm" class="loginform active"><label>연락처 또는 이메일<input name="identifier" autocomplete="username" placeholder="010-0000-0000 또는 you@example.com" required></label><label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label><button class="primary">로그인</button><p class="hint">관리자는 관리자 계정으로 로그인한 뒤 상단의 관리자 메뉴를 이용하세요.</p></form><form id="signupForm" class="loginform"><div class="formgrid"><label>연락처<input name="phone" type="tel" autocomplete="tel" placeholder="010-0000-0000" required></label><label>이메일<input name="email" type="email" autocomplete="email" required></label><label>이름<input name="name" autocomplete="name" required></label><label>기수<input name="cohort" required></label><label>그룹<input name="group_name" required></label><label>다락방<input name="darabang" required></label><label>순<input name="soon" required></label><label>비밀번호<input name="password" type="password" autocomplete="new-password" minlength="8" required></label></div><button class="secondary" id="verifyEmailBtn" type="button">이메일 인증메일 보내기</button><p class="hint" id="emailVerifyStatus">이메일 인증을 먼저 진행해 주세요.</p><button class="primary" id="completeSignup" disabled>회원가입</button><p class="hint">인증메일 링크를 열어 이메일을 인증한 뒤 이 화면으로 돌아와 회원가입을 눌러주세요.</p></form></div></div>
+<div id="reauthModal" class="modal"><form id="reauthForm" class="modal-card"><div class="modal-head"><h2>비밀번호 확인</h2><button class="close" id="closeReauth" type="button">×</button></div><p class="hint">마이페이지를 열려면 계정 비밀번호를 다시 입력해 주세요.</p><input id="reauthPassword" class="field" type="password" autocomplete="current-password" required><button class="primary">확인</button></form></div><div class="toast" id="toast"></div>
 <script type="module">
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-// Netlify 사이트 환경설정: 아래 두 값은 Supabase Dashboard > Project Settings > API의 Project URL / anon public key
-let SUPABASE_URL='',SUPABASE_ANON_KEY='';try{const cfg=await fetch('/.netlify/functions/config').then(r=>r.ok?r.json():null);SUPABASE_URL=cfg?.url||'';SUPABASE_ANON_KEY=cfg?.anonKey||''}catch{}const configured=!!(SUPABASE_URL&&SUPABASE_ANON_KEY);const supabase=configured?createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
-const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);let user=null,profile=null,sessionId=null,timer=null,startAt=0,myBase=0,pollerStarted=false;const fmt=s=>[Math.floor(s/3600),Math.floor(s%3600/60),Math.floor(s%60)].map(n=>String(n).padStart(2,'0')).join(':');const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function toast(s){let e=$('#toast');e.textContent=s;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2800)}function page(id){$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.nav [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo(0,0);if(id==='mypage')loadMine()}
-window.openAuth=tab=>{if(!configured){toast('Supabase 연결 설정 후 로그인을 사용할 수 있어요.');return}$('#authModal').classList.add('open');authTab(tab)};function authTab(t){$$('[data-auth-tab]').forEach(b=>b.classList.toggle('active',b.dataset.authTab===t));$('#loginForm').classList.toggle('active',t==='login');$('#signupForm').classList.toggle('active',t==='signup')}
-$$('.nav [data-page]').forEach(b=>b.onclick=()=>page(b.dataset.page));$('#goRoom').onclick=()=>page('room');$('#authButton').onclick=()=>window.openAuth('login');$('#closeModal').onclick=()=>$('#authModal').classList.remove('open');$('#authModal').onclick=e=>{if(e.target===$('#authModal'))$('#authModal').classList.remove('open')};$$('[data-auth-tab]').forEach(b=>b.onclick=()=>authTab(b.dataset.authTab));
-$('#loginForm').onsubmit=async e=>{e.preventDefault();if(!configured)return;let f=new FormData(e.currentTarget),identifier=String(f.get('identifier')).trim(),password=String(f.get('password'));try{let res;if(identifier.includes('@'))res=await supabase.auth.signInWithPassword({email:identifier,password});else{let phone=identifier.replace(/[^0-9+]/g,'');let r=await fetch('/.netlify/functions/phone-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,password})});let body=await r.json();if(!r.ok)throw new Error(body.error||'로그인에 실패했어요');res=await supabase.auth.setSession({access_token:body.access_token,refresh_token:body.refresh_token})}if(res.error)throw res.error;$('#authModal').classList.remove('open');toast('로그인했어요');await init()}catch(err){toast(err.message||'로그인에 실패했어요')}};
-$('#signupForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.currentTarget),v=Object.fromEntries(f.entries());v.phone=v.phone.replace(/[^0-9+]/g,'');if(!configured)return toast('Supabase 연결 설정 후 가입할 수 있어요.');try{let {data,error}=await supabase.auth.signUp({email:v.email.trim().toLowerCase(),password:v.password,options:{data:{name:v.name.trim(),phone:v.phone,cohort:v.cohort.trim(),group_name:v.group_name.trim(),darabang:v.darabang.trim(),soon:v.soon.trim()}}});if(error)throw error;if(data.session){$('#authModal').classList.remove('open');toast('가입 및 로그인 완료');await init()}else toast('인증 이메일을 보냈어요. 이메일 인증 후 로그인해 주세요.')}catch(err){toast(err.message||'가입에 실패했어요')}};
-async function init(){if(!configured){toast('실제 로그인 사용 전 Supabase URL과 공개 키 설정이 필요합니다.');return}let {data:{session}}=await supabase.auth.getSession();user=session?.user||null;profile=null;if(user){let {data,error}=await supabase.from('profiles').select('*').eq('id',user.id).maybeSingle();if(error)console.error(error);profile=data||{};}$('#authButton').classList.toggle('hidden',!!user);$('#logoutButton').classList.toggle('hidden',!user);$('#adminNav').classList.toggle('hidden',profile?.role!=='admin');$('#signedOut').classList.toggle('hidden',!!user);$('#myContent').classList.toggle('hidden',!user);if(user){$('#myName').textContent=profile.name||'기도자';$('#nameInput').value=profile.name||'';$('#myProfileDetails').textContent=[profile.cohort&&profile.cohort+'기',profile.group_name,profile.darabang,profile.soon&&profile.soon+'순'].filter(Boolean).join(' · ')}await loadRoom();if(user)await loadMine()}
-$('#logoutButton').onclick=async()=>{if(sessionId)await stopPrayer();await supabase.auth.signOut();user=null;profile=null;await init();page('home');toast('로그아웃했어요')};
-async function loadRoom(){if(!configured)return;let {data:settings}=await supabase.from('room_settings').select('*').eq('id',1).maybeSingle();if(settings){$('#roomTopic').textContent=settings.prayer_topic||'주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.';$('#topicBy').textContent=settings.prayer_topic?'관리자가 나눈 오늘의 기도제목':'기도제목을 마음에 담고 잠시 머물러 보세요.';if(settings.audio_url){$('#audio').src=settings.audio_url;$('#musicName').textContent=settings.audio_name||'배경음악'}}await refreshPresence();await refreshTotal();if(window.roomChannel)await supabase.removeChannel(window.roomChannel);window.roomChannel=supabase.channel('prayer-room').on('postgres_changes',{event:'*',schema:'public',table:'active_prayers'},refreshPresence).on('postgres_changes',{event:'*',schema:'public',table:'room_settings'},loadRoom).subscribe();if(!pollerStarted){pollerStarted=true;setInterval(refreshPresence,30000);setInterval(refreshTotal,60000)}}
-async function refreshPresence(){if(!configured)return;let {data,error}=await supabase.from('active_prayers').select('user_id,display_name,started_at');if(error){console.error(error);return}let rows=data||[];$('#homeCount').textContent=rows.length;$('#countLabel').textContent=rows.length+'명';$('#people').innerHTML=rows.length?rows.map(x=>`<div class="person"><span class="dot"></span>${esc(x.display_name)}<span class="pill">기도 중</span></div>`).join(''):'<div class="empty">아직 기도 중인 사람이 없어요.<br>첫 번째로 기도를 시작해 보세요.</div>'}
-async function refreshTotal(){if(!configured)return;let {data,error}=await supabase.rpc('public_prayer_total_seconds');if(!error){$('#homeTotal').textContent=fmt(data||0)}}async function loadMine(){if(!user||!configured)return;let {data,error}=await supabase.from('prayer_sessions').select('id,started_at,ended_at,duration_seconds').eq('user_id',user.id).order('started_at',{ascending:false});if(error){console.error(error);return}myBase=(data||[]).reduce((a,x)=>a+(x.duration_seconds||0),0);let secs=myBase;if(sessionId){let active=(data||[]).find(x=>x.id===sessionId);if(active)secs+=Math.floor((Date.now()-Date.parse(active.started_at))/1000)}$('#myTotal').textContent=fmt(secs);let {data:topics}=await supabase.from('personal_prayer_topics').select('*').eq('user_id',user.id).order('created_at',{ascending:false});$('#myTopics').innerHTML=topics?.length?topics.map(x=>`<div class="topic"><small>${new Date(x.created_at).toLocaleDateString('ko-KR')}</small>${esc(x.content)}</div>`).join(''):'<div class="empty">저장된 기도제목이 없습니다.</div>'}
-$('#startBtn').onclick=async()=>{if(!user)return window.openAuth('login');if(sessionId)return;startAt=Date.now();let started_at=new Date(startAt).toISOString();let {data,error}=await supabase.from('prayer_sessions').insert({user_id:user.id,started_at}).select('id').single();if(error)return toast(error.message);sessionId=data.id;let {error:pe}=await supabase.from('active_prayers').upsert({user_id:user.id,display_name:profile.name||user.user_metadata?.name||'기도자',session_id:sessionId,started_at});if(pe){await supabase.from('prayer_sessions').delete().eq('id',sessionId);sessionId=null;return toast(pe.message)}$('#startBtn').classList.add('hidden');$('#stopBtn').classList.remove('hidden');$('#timerHint').textContent='기도 중 · 기도 마치기를 누르면 시간이 저장됩니다';try{await $('#audio').play()}catch{}timer=setInterval(()=>{$('#timer').textContent=fmt(Math.floor((Date.now()-startAt)/1000));if(user)document.getElementById("myTotal").textContent=fmt(myBase+Math.floor((Date.now()-startAt)/1000))},1000);await refreshPresence();toast('기도시간 기록을 시작했어요')};
-async function stopPrayer(){if(!sessionId)return;clearInterval(timer);let id=sessionId;let {data:sess}=await supabase.from('prayer_sessions').select('started_at').eq('id',id).single();let seconds=Math.floor((Date.now()-Date.parse(sess.started_at))/1000),end=new Date().toISOString();let {error}=await supabase.from('prayer_sessions').update({ended_at:end,duration_seconds:seconds}).eq('id',id);await supabase.from('active_prayers').delete().eq('user_id',user.id);sessionId=null;$('#audio').pause();$('#timer').textContent='00:00:00';$('#timerHint').textContent='로그인 후 기도를 시작할 수 있어요';$('#startBtn').classList.remove('hidden');$('#stopBtn').classList.add('hidden');await refreshPresence();await refreshTotal();await loadMine();if(error)toast(error.message);else toast('기도시간을 저장했어요')}
-$('#stopBtn').onclick=stopPrayer;$('#saveName').onclick=async()=>{let name=$('#nameInput').value.trim();if(!name)return toast('이름을 입력해 주세요');let {error}=await supabase.from('profiles').update({name}).eq('id',user.id);if(error)return toast(error.message);profile.name=name;$('#myName').textContent=name;toast('이름을 저장했어요')};$('#saveTopic').onclick=async()=>{let content=$('#myTopicInput').value.trim();if(!content)return toast('기도제목을 입력해 주세요');let {error}=await supabase.from('personal_prayer_topics').insert({user_id:user.id,content});if(error)return toast(error.message);$('#myTopicInput').value='';await loadMine();toast('기도제목을 저장했어요')};$('#saveAdminTopic').onclick=async()=>{if(profile?.role!=='admin')return toast('관리자만 변경할 수 있어요');let prayer_topic=$('#adminTopic').value.trim();let {error}=await supabase.from('room_settings').upsert({id:1,prayer_topic,updated_at:new Date().toISOString()});if(error)return toast(error.message);toast('공통 기도제목을 게시했어요');await loadRoom()};$('#audioFile').onchange=async e=>{if(profile?.role!=='admin')return toast('관리자만 음원을 변경할 수 있어요');let f=e.target.files[0];if(!f)return;if(f.size>40*1024*1024)return toast('음원은 40MB 이하 파일로 선택해 주세요');$('#uploadStatus').textContent='업로드 중…';let path=`room/${Date.now()}-${f.name.replace(/[^\w.가-힣-]/g,'_')}`;let {error}=await supabase.storage.from('room-audio').upload(path,f,{upsert:true,contentType:f.type});if(error){$('#uploadStatus').textContent=error.message;return toast(error.message)}let {data:{publicUrl}}=supabase.storage.from('room-audio').getPublicUrl(path);let {error:se}=await supabase.from('room_settings').upsert({id:1,audio_url:publicUrl,audio_name:f.name,updated_at:new Date().toISOString()});if(se)return toast(se.message);$('#uploadStatus').textContent='업로드 완료: '+f.name;await loadRoom();toast('배경음악을 업데이트했어요')};
-supabase?.auth.onAuthStateChange(()=>setTimeout(init,0));await init();
-</script></body></html>
+let createClient = null;
+
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
+const fmt = (seconds) => [Math.floor(seconds / 3600), Math.floor((seconds % 3600) / 60), Math.floor(seconds % 60)]
+  .map((part) => String(part).padStart(2, '0')).join(':');
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[char]));
+const phoneFormat = (value) => {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+  if (digits.length < 4) return digits;
+  if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+};
+const phoneDigits = (value) => String(value || '').replace(/\D/g, '');
+function youtubeVideoId(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.replace(/^www\./, '').toLowerCase();
+    if (host === 'youtu.be') return url.pathname.split('/').filter(Boolean)[0]?.match(/^[A-Za-z0-9_-]{11}$/)?.[0] || null;
+    if (!['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtube-nocookie.com'].includes(host)) return null;
+    const watchId = url.searchParams.get('v');
+    if (watchId && /^[A-Za-z0-9_-]{11}$/.test(watchId)) return watchId;
+    return url.pathname.match(/\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})(?:$|\/)/)?.[1] || null;
+  } catch { return null; }
+}
+
+function youtubeEmbedUrl(videoId) {
+  const params = new URLSearchParams({ autoplay: '0', controls: '1', enablejsapi: '1', loop: '1', playlist: videoId, playsinline: '1', origin: window.location.origin });
+  return `https://www.youtube.com/embed/${videoId}?${params}`;
+}
+
+function sendYouTubeCommand(func) {
+  if ($('#youtubeWrap').classList.contains('hidden')) return;
+  $('#youtubePlayer').contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), 'https://www.youtube.com');
+}
+
+function startPrayerMusic() {
+  if (!$('#youtubeWrap').classList.contains('hidden')) {
+    sendYouTubeCommand('playVideo');
+    return;
+  }
+  if ($('#audio').getAttribute('src')) $('#audio').play().catch(() => toast('음악 플레이어의 재생 버튼을 눌러주세요.'));
+}
+
+function pausePrayerMusic() {
+  $('#audio').pause();
+  sendYouTubeCommand('pauseVideo');
+}
+
+let supabase = null;
+let configured = false;
+let user = null;
+let profile = null;
+let activeSessionId = null;
+let activeStartedAt = 0;
+let completedPrayerSeconds = 0;
+let prayerTicker = null;
+let adminLoginPending = false;
+let initialized = false;
+let roomPollerStarted = false;
+let currentPrayerTopic = '';
+let adminPrayerHistory = [];
+let editingSharedPrayerTopicId = null;
+let roomPresenceChannel = null;
+let roomPresenceStatus = 'CLOSED';
+let roomPresenceTracked = false;
+let roomVisitors = [];
+let activePrayerPeople = [];
+let prayingUserIds = new Set();
+let adminMembers = new Map();
+
+function toast(message) {
+  const element = $('#toast');
+  element.textContent = message;
+  element.classList.add('show');
+  setTimeout(() => element.classList.remove('show'), 3000);
+}
+
+function page(id) {
+  $$('.page').forEach((section) => section.classList.toggle('active', section.id === id));
+  $$('.nav [data-page]').forEach((button) => button.classList.toggle('active', button.dataset.page === id));
+  window.scrollTo(0, 0);
+  if (id === 'mypage') loadMine();
+  if (id === 'admin' && profile?.role === 'admin') loadAdminData();
+  if (id === 'room') {
+    refreshPresence();
+    startRoomPresence();
+  } else {
+    stopRoomPresence();
+  }
+}
+
+function authTab(tab) {
+  $$('[data-auth-tab]').forEach((button) => button.classList.toggle('active', button.dataset.authTab === tab));
+  $('#loginForm').classList.toggle('active', tab === 'login');
+  $('#signupForm').classList.toggle('active', tab === 'signup');
+  if (tab === 'signup') refreshSignupGate();
+}
+
+window.openAuth = (tab = 'login') => {
+  if (!configured) return toast('Supabase 연결 설정 후 로그인을 사용할 수 있어요.');
+  $('#authModal').classList.add('open');
+  authTab(tab);
+};
+
+function refreshSignupGate() {
+  const email = $('#signupForm [name="email"]').value.trim().toLowerCase();
+  const verified = !!(user && user.email_confirmed_at && user.email?.toLowerCase() === email);
+  $('#completeSignup').disabled = !verified;
+  $('#signupForm [name="password"]').required = !verified;
+  $('#emailVerifyStatus').textContent = verified
+    ? '이메일 인증이 확인됐어요. 회원가입을 완료해 주세요.'
+    : (localStorage.getItem('linkpray-pending-email') === email && email
+      ? '인증메일의 링크를 눌러 인증을 마친 뒤 이 화면으로 돌아오세요.'
+      : '이메일 인증을 먼저 진행해 주세요.');
+}
+
+function showProfile() {
+  $('#signedOut').classList.toggle('hidden', !!user);
+  $('#myContent').classList.toggle('hidden', !user);
+  if (!user) return;
+  $('#myName').textContent = profile?.name || '기도자';
+  $('#profileName').value = profile?.name || '';
+  $('#profilePhone').value = phoneFormat(profile?.phone || '');
+  $('#profileCohort').value = profile?.cohort || '';
+  $('#profileGroup').value = profile?.group_name || '';
+  $('#profileDarabang').value = profile?.darabang || '';
+  $('#profileSoon').value = profile?.soon || '';
+  $('#profileEmailInput').value = user.email || '';
+  updateEmailChangeState();
+  $('#myProfileDetails').textContent = [profile?.cohort && `${profile.cohort}기`, profile?.group_name,
+    profile?.darabang, profile?.soon && `${profile.soon}순`].filter(Boolean).join(' · ');
+}
+
+function updateEmailChangeState() {
+  if (!user) return;
+  const pending = localStorage.getItem('linkpray-pending-email-change')?.trim().toLowerCase();
+  const applied = !!(pending && user.email_confirmed_at && user.email?.toLowerCase() === pending);
+  $('#emailReauthBox').classList.toggle('hidden', !applied);
+  $('#emailChangeStatus').textContent = applied
+    ? '새 이메일 인증이 확인됐어요. 비밀번호를 다시 입력해 변경을 확정해 주세요.'
+    : (pending
+      ? `Supabase 이메일 변경 설정에 따라 새 주소와 기존 주소에서 인증을 완료한 뒤 이 화면으로 돌아오세요. (요청: ${pending})`
+      : '이메일을 변경하려면 새 주소로 인증을 완료해 주세요.');
+  $('#confirmEmailChange').disabled = !applied;
+}
+
+async function requestEmailChange() {
+  const email = $('#profileEmailInput').value.trim().toLowerCase();
+  if (!email || !$('#profileEmailInput').checkValidity()) return toast('올바른 이메일 주소를 입력해 주세요.');
+  if (email === user.email?.toLowerCase()) return toast('현재 이메일과 다른 주소를 입력해 주세요.');
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${window.location.origin}${window.location.pathname}` }
+  );
+  if (error) return toast(error.message);
+  localStorage.setItem('linkpray-pending-email-change', email);
+  updateEmailChangeState();
+  toast('인증메일을 보냈어요. 메일 안내에 따라 인증을 완료해 주세요.');
+}
+
+async function confirmEmailChange() {
+  const email = localStorage.getItem('linkpray-pending-email-change')?.trim().toLowerCase();
+  const password = $('#emailReauthPassword').value;
+  if (!email || !password) return toast('계정 비밀번호를 입력해 주세요.');
+  if (!user.email_confirmed_at || user.email?.toLowerCase() !== email) return toast('새 이메일 인증이 아직 완료되지 않았어요.');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return toast('비밀번호를 확인해 주세요.');
+  user = data.user;
+  localStorage.removeItem('linkpray-pending-email-change');
+  $('#emailReauthPassword').value = '';
+  await init();
+  toast('이메일 변경을 확정했어요.');
+}
+
+async function init() {
+  if (!configured) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  user = session?.user || null;
+  profile = null;
+  if (user) {
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    profile = data || {};
+    const pendingEmail = localStorage.getItem('linkpray-pending-email');
+    if (pendingEmail && pendingEmail.toLowerCase() === user.email?.toLowerCase()) {
+      const signup = $('#signupForm');
+      signup.elements.email.value = user.email;
+      signup.elements.phone.value = phoneFormat(profile.phone || '');
+      signup.elements.name.value = profile.name || '';
+      signup.elements.cohort.value = profile.cohort || '';
+      signup.elements.group_name.value = profile.group_name || '';
+      signup.elements.darabang.value = profile.darabang || '';
+      signup.elements.soon.value = profile.soon || '';
+      $('#emailVerifyStatus').textContent = '이메일 인증이 확인됐어요. 회원가입을 완료해 주세요.';
+    }
+  }
+  $('#authButton').classList.toggle('hidden', !!user);
+  $('#logoutButton').classList.toggle('hidden', !user);
+  $('#adminNav').classList.remove('hidden');
+  $('#homeMyStat').classList.toggle('hidden', !user);
+  showProfile();
+  refreshSignupGate();
+  await loadRoom();
+  if (user) {
+    await loadMine();
+    await restoreActivePrayer();
+  }
+  if ($('#room').classList.contains('active')) startRoomPresence();
+  if (adminLoginPending && user) {
+    adminLoginPending = false;
+    if (profile?.role === 'admin') page('admin');
+    else toast('이 계정은 관리자 권한이 없어요.');
+  }
+  initialized = true;
+}
+
+async function restoreActivePrayer() {
+  const { data: active } = await supabase.from('active_prayers').select('session_id,started_at').eq('user_id', user.id).maybeSingle();
+  if (!active) return;
+  activeSessionId = active.session_id;
+  activeStartedAt = Date.parse(active.started_at);
+  $('#startBtn').classList.add('hidden');
+  $('#stopBtn').classList.remove('hidden');
+  $('#timerHint').textContent = '기도 중 · 기도 마치기를 누르면 시간이 저장됩니다';
+  startTicker();
+}
+
+async function loadRoom() {
+  if (!configured) return;
+  const { data: settings } = await supabase.from('room_settings').select('*').eq('id', 1).maybeSingle();
+  if (settings) {
+    $('#youtubeUrl').value = settings.youtube_url || '';
+    currentPrayerTopic = settings.prayer_topic || '';
+    $('#roomTopic').textContent = settings.prayer_topic || '주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.';
+    if (settings.prayer_topic) {
+      const posted = new Date(settings.prayer_updated_at || settings.updated_at || Date.now());
+      const postedDate = `${posted.getFullYear()}년 ${String(posted.getMonth() + 1).padStart(2, '0')}월 ${String(posted.getDate()).padStart(2, '0')}일`;
+      $('#topicBy').textContent = `${postedDate} 오늘의 기도제목`;
+    } else {
+      $('#topicBy').textContent = '기도제목을 마음에 담고 잠시 머물러 보세요.';
+    }
+    const videoId = settings.youtube_url ? youtubeVideoId(settings.youtube_url) : null;
+    if (videoId) {
+      const embedUrl = youtubeEmbedUrl(videoId);
+      if ($('#youtubePlayer').src !== embedUrl) $('#youtubePlayer').src = embedUrl;
+      $('#youtubeWrap').classList.remove('hidden');
+      $('#audio').classList.add('hidden');
+      $('#musicName').textContent = 'YouTube 배경음악';
+    } else {
+      $('#youtubeWrap').classList.add('hidden');
+      $('#youtubePlayer').removeAttribute('src');
+      $('#audio').classList.toggle('hidden', !settings.audio_url);
+      $('#musicName').textContent = settings.audio_name || '배경음악';
+    }
+    if (settings.audio_url && !videoId) {
+      $('#audio').src = settings.audio_url;
+    } else if (!videoId) {
+      $('#audio').removeAttribute('src');
+    }
+  }
+  await refreshPresence();
+  await refreshTotal();
+  if (!window.prayerRoomChannel) {
+    window.prayerRoomChannel = supabase.channel('prayer-room-data')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'active_prayers' }, async () => {
+        await refreshPresence();
+        await refreshTotal();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_settings' }, async () => {
+        await loadRoom();
+        await refreshTotal();
+        if (user) await loadMine();
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') refreshPresence();
+      });
+  }
+  if (!roomPollerStarted) {
+    roomPollerStarted = true;
+    setInterval(() => {
+      if ($('#room').classList.contains('active')) {
+        refreshPresence();
+        startRoomPresence();
+      }
+    }, 5000);
+    setInterval(refreshTotal, 30000);
+  }
+}
+
+async function refreshPresence() {
+  const { data, error } = await supabase.from('active_prayers').select('user_id,display_name,started_at,session_id');
+  if (error) return;
+  activePrayerPeople = data || [];
+  prayingUserIds = new Set(activePrayerPeople.map((person) => person.user_id));
+  const myLivePrayer = activeSessionId && activePrayerPeople.find((person) => person.user_id === user?.id && person.session_id === activeSessionId);
+  if (myLivePrayer) {
+    const serverStartedAt = Date.parse(myLivePrayer.started_at);
+    if (Number.isFinite(serverStartedAt) && serverStartedAt !== activeStartedAt) {
+      activeStartedAt = serverStartedAt;
+      startTicker();
+      loadMine();
+    }
+  }
+  const state = roomPresenceChannel?.presenceState?.() || {};
+  const visitorById = new Map();
+  Object.values(state).flat().forEach((visitor) => {
+    if (visitor.user_id) visitorById.set(visitor.user_id, visitor.display_name || '기도자');
+  });
+  roomVisitors = [...visitorById.entries()].map(([user_id, display_name]) => ({ user_id, display_name }));
+  renderRoomVisitors();
+}
+
+function renderRoomVisitors() {
+  const people = roomPresenceStatus === 'SUBSCRIBED'
+    ? roomVisitors
+    : activePrayerPeople.map(({ user_id, display_name }) => ({ user_id, display_name }));
+  $('#homeCount').textContent = people.length;
+  $('#countLabel').textContent = `${people.length}명`;
+  $('#people').innerHTML = people.length
+    ? people.map((person) => `<div class="person"><span class="dot"></span>${esc(person.display_name)}<span class="pill">${prayingUserIds.has(person.user_id) ? '기도 중' : '함께 있음'}</span></div>`).join('')
+    : '<div class="empty">기도실에 입장하면 이름이 여기에 표시돼요.</div>';
+}
+
+function startRoomPresence() {
+  if (!configured || !user || !$('#room').classList.contains('active')) return;
+  if (!roomPresenceChannel) {
+    const key = globalThis.crypto?.randomUUID?.() || `room-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    roomPresenceChannel = supabase.channel('link-pray-room-visitors', { config: { presence: { key } } })
+      .on('presence', { event: 'sync' }, () => {
+        roomVisitors = Object.values(roomPresenceChannel.presenceState()).flat()
+          .filter((entry) => entry.user_id)
+          .reduce((list, entry) => {
+            if (!list.some((person) => person.user_id === entry.user_id)) list.push(entry);
+            return list;
+          }, [])
+          .map((entry) => ({ user_id: entry.user_id, display_name: entry.display_name || '기도자' }));
+        renderRoomVisitors();
+      })
+      .subscribe(async (status) => {
+        roomPresenceStatus = status;
+        if (status === 'SUBSCRIBED' && user && $('#room').classList.contains('active')) {
+          const { error } = await roomPresenceChannel.track({
+            user_id: user.id,
+            display_name: profile?.name || user.user_metadata?.name || '기도자'
+          });
+          roomPresenceTracked = !error;
+        } else if (status !== 'SUBSCRIBED') {
+          roomPresenceTracked = false;
+        }
+        renderRoomVisitors();
+      });
+  } else if (roomPresenceStatus === 'SUBSCRIBED' && !roomPresenceTracked) {
+    roomPresenceChannel.track({
+      user_id: user.id,
+      display_name: profile?.name || user.user_metadata?.name || '기도자'
+    }).then(({ error }) => { roomPresenceTracked = !error; });
+  }
+}
+
+function stopRoomPresence() {
+  if (roomPresenceChannel && roomPresenceStatus === 'SUBSCRIBED' && roomPresenceTracked) {
+    roomPresenceChannel.untrack();
+  }
+  roomPresenceTracked = false;
+}
+
+async function refreshTotal() {
+  const { data, error } = await supabase.rpc('public_prayer_total_seconds');
+  if (!error) $('#homeTotal').textContent = fmt(Number(data || 0));
+}
+
+async function loadMine() {
+  if (!user || !configured) return;
+  const { data: sessions, error } = await supabase.from('prayer_sessions')
+    .select('id,started_at,ended_at,duration_seconds').eq('user_id', user.id).order('started_at', { ascending: false });
+  if (error) return;
+  completedPrayerSeconds = (sessions || []).reduce((sum, session) => sum + Number(session.duration_seconds || 0), 0);
+  const liveSeconds = activeSessionId ? Math.floor((Date.now() - activeStartedAt) / 1000) : 0;
+  $('#myTotal').textContent = fmt(completedPrayerSeconds + liveSeconds);
+  $('#homeMyTotal').textContent = fmt(completedPrayerSeconds + liveSeconds);
+  const { data: topics } = await supabase.from('personal_prayer_topics').select('*')
+    .eq('user_id', user.id).order('created_at', { ascending: false });
+  $('#myTopics').innerHTML = (topics || []).length ? topics.map(renderPrayerTopic).join('')
+    : '<div class="empty">저장된 기도제목이 없습니다.</div>';
+}
+
+function renderPrayerTopic(topic) {
+  const created = new Date(topic.created_at).toLocaleDateString('ko-KR');
+  const response = topic.responded_at
+    ? `<div class="answer-box"><strong>${new Date(topic.responded_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).replace(/\s/g, '')} 기도응답</strong><div>${esc(topic.response_content)}</div></div>`
+    : '';
+  return `<article class="topic"><small>${created}</small><div>${esc(topic.content)}</div>${response}
+    <div class="topic-actions"><button class="response-button" type="button" onclick="window.toggleTopicEdit('${topic.id}')">수정</button>
+    <button class="response-button" type="button" onclick="window.deletePrayerTopic('${topic.id}')">삭제</button>
+    <button class="response-button" type="button" onclick="window.toggleResponse('${topic.id}')">${topic.response_content ? '응답 수정' : '응답 기록'}</button></div>
+    <div class="response-editor hidden" id="topic-editor-${topic.id}"><textarea class="field" id="topic-text-${topic.id}">${esc(topic.content)}</textarea><button class="secondary" type="button" onclick="window.savePrayerTopic('${topic.id}')">수정 저장</button></div>
+    <div class="response-editor hidden" id="response-editor-${topic.id}"><textarea class="field" id="response-text-${topic.id}" placeholder="기도 응답 내용을 적어주세요.">${esc(topic.response_content || '')}</textarea><button class="secondary" type="button" onclick="window.savePrayerResponse('${topic.id}')">응답 저장</button></div></article>`;
+}
+
+window.toggleTopicEdit = (id) => $(`#topic-editor-${id}`).classList.toggle('hidden');
+window.savePrayerTopic = async (id) => {
+  const content = $(`#topic-text-${id}`).value.trim();
+  if (!content) return toast('기도제목을 입력해 주세요.');
+  const { error } = await supabase.from('personal_prayer_topics').update({ content }).eq('id', id).eq('user_id', user.id);
+  if (error) return toast(error.message);
+  await loadMine();
+  toast('기도제목을 수정했어요.');
+};
+window.deletePrayerTopic = async (id) => {
+  if (!window.confirm('이 기도제목을 삭제할까요?')) return;
+  const { error } = await supabase.from('personal_prayer_topics').delete().eq('id', id).eq('user_id', user.id);
+  if (error) return toast(error.message);
+  await loadMine();
+  toast('기도제목을 삭제했어요.');
+};
+window.toggleResponse = (id) => $(`#response-editor-${id}`).classList.toggle('hidden');
+window.savePrayerResponse = async (id) => {
+  const content = $(`#response-text-${id}`).value.trim();
+  if (!content) return toast('기도 응답 내용을 입력해 주세요.');
+  const { error } = await supabase.from('personal_prayer_topics').update({ response_content: content, responded_at: new Date().toISOString() })
+    .eq('id', id).eq('user_id', user.id);
+  if (error) return toast(error.message);
+  await loadMine();
+  toast('기도 응답을 기록했어요.');
+};
+
+function startTicker() {
+  clearInterval(prayerTicker);
+  const update = () => {
+    if (!activeSessionId) return;
+    const elapsed = Math.max(0, Math.floor((Date.now() - activeStartedAt) / 1000));
+    $('#timer').textContent = fmt(elapsed);
+    $('#myTotal').textContent = fmt(completedPrayerSeconds + elapsed);
+    $('#homeMyTotal').textContent = fmt(completedPrayerSeconds + elapsed);
+  };
+  update();
+  prayerTicker = setInterval(update, 1000);
+}
+
+async function beginPrayer() {
+  if (!user) return window.openAuth('login');
+  if (activeSessionId) return;
+  const clickedAt = Date.now();
+  startPrayerMusic();
+  const startedAt = new Date(clickedAt).toISOString();
+  const { data: session, error } = await supabase.from('prayer_sessions')
+    .insert({ user_id: user.id, started_at: startedAt }).select('id,started_at').single();
+  if (error) { pausePrayerMusic(); return toast(error.message); }
+  const { error: presenceError } = await supabase.from('active_prayers').upsert({
+    user_id: user.id, display_name: profile?.name || user.user_metadata?.name || '기도자',
+    session_id: session.id, started_at: session.started_at
+  });
+  if (presenceError) {
+    await supabase.from('prayer_sessions').delete().eq('id', session.id);
+    pausePrayerMusic();
+    return toast(presenceError.message);
+  }
+  activeSessionId = session.id;
+  activeStartedAt = Date.parse(session.started_at);
+  if (!Number.isFinite(activeStartedAt)) activeStartedAt = clickedAt;
+  $('#startBtn').classList.add('hidden');
+  $('#stopBtn').classList.remove('hidden');
+  $('#timerHint').textContent = '기도 중 · 기도 마치기를 누르면 시간이 저장됩니다';
+  // Start the visible clock before waiting for the browser's audio permission.
+  startTicker();
+  await refreshPresence();
+  toast('기도시간 기록을 시작했어요.');
+}
+
+async function stopPrayer() {
+  if (!activeSessionId) return;
+  clearInterval(prayerTicker);
+  const id = activeSessionId;
+  const seconds = Math.max(0, Math.floor((Date.now() - activeStartedAt) / 1000));
+  const { error } = await supabase.from('prayer_sessions').update({
+    ended_at: new Date().toISOString(), duration_seconds: seconds
+  }).eq('id', id).eq('user_id', user.id);
+  const { error: presenceError } = await supabase.from('active_prayers').delete().eq('user_id', user.id);
+  activeSessionId = null;
+  activeStartedAt = 0;
+  pausePrayerMusic();
+  $('#timer').textContent = '00:00:00';
+  $('#timerHint').textContent = '로그인 후 기도를 시작할 수 있어요';
+  $('#startBtn').classList.remove('hidden');
+  $('#stopBtn').classList.add('hidden');
+  await refreshPresence();
+  await refreshTotal();
+  await loadMine();
+  if (error || presenceError) toast((error || presenceError).message);
+  else toast('시작부터 마칠 때까지의 기도시간을 저장했어요.');
+}
+
+async function sendVerificationEmail() {
+  const form = $('#signupForm');
+  const emailInput = form.elements.email;
+  emailInput.value = emailInput.value.trim().toLowerCase();
+  if (!form.checkValidity()) return form.reportValidity();
+  if (user && user.email?.toLowerCase() === emailInput.value && user.email_confirmed_at) {
+    return toast('이미 이 이메일을 인증했어요. 회원가입을 눌러주세요.');
+  }
+  const values = Object.fromEntries(new FormData(form).entries());
+  values.phone = phoneDigits(values.phone);
+  if (values.phone.length !== 11 || !values.phone.startsWith('010')) return toast('휴대폰 번호를 010-0000-0000 형식으로 입력해 주세요.');
+  $('#verifyEmailBtn').disabled = true;
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
+      options: { data: {
+        name: values.name.trim(), phone: values.phone, cohort: values.cohort.trim(),
+        group_name: values.group_name.trim(), darabang: values.darabang.trim(), soon: values.soon.trim()
+      } }
+    });
+    if (error) throw error;
+    localStorage.setItem('linkpray-pending-email', values.email);
+    if (data.session?.user?.email_confirmed_at) {
+      user = data.session.user;
+      refreshSignupGate();
+      return toast('이메일이 확인됐어요. 회원가입을 눌러주세요.');
+    }
+    $('#emailVerifyStatus').textContent = '인증메일을 보냈어요. 메일의 인증 링크를 누른 뒤 이 사이트로 돌아오세요.';
+    toast('인증메일을 보냈어요.');
+  } catch (error) {
+    toast(error.message || '인증메일을 보내지 못했어요.');
+  } finally {
+    $('#verifyEmailBtn').disabled = false;
+  }
+}
+
+async function completeSignup(event) {
+  event.preventDefault();
+  await init();
+  const email = $('#signupForm [name="email"]').value.trim().toLowerCase();
+  if (!user || !user.email_confirmed_at || user.email?.toLowerCase() !== email) {
+    refreshSignupGate();
+    return toast('인증메일의 링크를 눌러 이메일 인증을 먼저 마쳐주세요.');
+  }
+  localStorage.removeItem('linkpray-pending-email');
+  $('#authModal').classList.remove('open');
+  toast('회원가입이 완료됐어요.');
+  await init();
+}
+
+async function login(event) {
+  event.preventDefault();
+  const values = new FormData(event.currentTarget);
+  const identifier = String(values.get('identifier')).trim();
+  const password = String(values.get('password'));
+  try {
+    let result;
+    if (identifier.includes('@')) {
+      result = await supabase.auth.signInWithPassword({ email: identifier.toLowerCase(), password });
+    } else {
+      const response = await fetch('/.netlify/functions/phone-login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneDigits(identifier), password })
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || '로그인에 실패했어요.');
+      result = await supabase.auth.setSession({ access_token: body.access_token, refresh_token: body.refresh_token });
+    }
+    if (result.error) throw result.error;
+    $('#authModal').classList.remove('open');
+    await init();
+    toast('로그인했어요.');
+  } catch (error) {
+    toast(error.message || '로그인에 실패했어요.');
+  }
+}
+
+async function reauthenticate(event) {
+  event.preventDefault();
+  const password = $('#reauthPassword').value;
+  const { error } = await supabase.auth.signInWithPassword({ email: user.email, password });
+  if (error) return toast('비밀번호가 맞지 않아요.');
+  $('#reauthModal').classList.remove('open');
+  $('#reauthPassword').value = '';
+  page('mypage');
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+  const phone = phoneDigits($('#profilePhone').value);
+  if (phone.length !== 11 || !phone.startsWith('010')) return toast('휴대폰 번호를 확인해 주세요.');
+  const changes = {
+    name: $('#profileName').value.trim(), phone, cohort: $('#profileCohort').value.trim(),
+    group_name: $('#profileGroup').value.trim(), darabang: $('#profileDarabang').value.trim(), soon: $('#profileSoon').value.trim()
+  };
+  const { error } = await supabase.from('profiles').update(changes).eq('id', user.id);
+  if (error) return toast(error.message);
+  profile = { ...profile, ...changes };
+  showProfile();
+  toast('회원정보를 저장했어요.');
+}
+
+async function saveTopic() {
+  const content = $('#myTopicInput').value.trim();
+  if (!content) return toast('기도제목을 입력해 주세요.');
+  const { error } = await supabase.from('personal_prayer_topics').insert({ user_id: user.id, content });
+  if (error) return toast(error.message);
+  $('#myTopicInput').value = '';
+  await loadMine();
+  toast('기도제목을 저장했어요.');
+}
+
+async function saveAdminTopic() {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const content = $('#adminTopic').value.trim();
+  if (!content) return toast('공통 기도제목을 입력해 주세요.');
+  const { error: historyError } = await supabase.from('room_prayer_topics').insert({ content, created_by: user.id });
+  if (historyError) return toast(historyError.message);
+  const now = new Date().toISOString();
+  const { error } = await supabase.from('room_settings').update({ prayer_topic: content, prayer_updated_at: now, updated_at: now }).eq('id', 1);
+  if (error) return toast(error.message);
+  $('#adminTopic').value = '';
+  await loadRoom();
+  await loadAdminData();
+  toast('공통 기도제목을 게시했어요.');
+}
+
+window.resetAllPrayerTime = async () => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  if (!window.confirm('모든 회원의 완료된 기도 기록을 삭제해 전체 누적을 초기화할까요? 진행 중인 기도는 이 시각부터 다시 계산됩니다.')) return;
+  const { error } = await supabase.rpc('admin_reset_prayer_time', { target_user_id: null });
+  if (error) return toast(error.message);
+  await refreshTotal();
+  await refreshPresence();
+  await loadAdminData();
+  if (user) await loadMine();
+  toast('전체 기도시간을 초기화했어요.');
+};
+
+window.resetMemberPrayerTime = async (memberId) => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const member = adminMembers.get(memberId);
+  if (!member) return toast('회원을 찾을 수 없어요.');
+  const memberName = member.name || '이 회원';
+  if (!window.confirm(`${memberName}님의 완료된 기도 기록을 삭제해 누적을 초기화할까요? 진행 중인 기도는 이 시각부터 다시 계산됩니다.`)) return;
+  const { error } = await supabase.rpc('admin_reset_prayer_time', { target_user_id: memberId });
+  if (error) return toast(error.message);
+  await refreshTotal();
+  await refreshPresence();
+  await loadAdminData();
+  if (memberId === user.id) await loadMine();
+  toast(`${memberName}님의 기도시간을 초기화했어요.`);
+};
+
+async function loadAdminData() {
+  if (profile?.role !== 'admin') return;
+  const historyEl = $('#adminPrayerHistory');
+  const personalEl = $('#adminPersonalTopics');
+  if (!historyEl || !personalEl) return;
+  historyEl.innerHTML = '<div class="empty">불러오는 중…</div>';
+  personalEl.innerHTML = '<div class="empty">불러오는 중…</div>';
+  const [{ data: history, error: historyError }, { data: topics, error: topicsError }, { data: members, error: memberError }, { data: sessions, error: sessionsError }, { data: activeRows, error: activeError }] = await Promise.all([
+    supabase.from('room_prayer_topics').select('id,content,created_at,created_by').order('created_at', { ascending: false }),
+    supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false }),
+    supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').order('name'),
+    supabase.from('prayer_sessions').select('user_id,started_at,ended_at,duration_seconds'),
+    supabase.from('active_prayers').select('user_id,started_at')
+  ]);
+  if (historyError) historyEl.innerHTML = `<div class="empty">${esc(historyError.message)}</div>`;
+  else {
+    adminPrayerHistory = history || [];
+    renderAdminPrayerHistory();
+  }
+  const totalsEl = $('#adminPrayerTotals');
+  if (memberError || sessionsError || activeError) {
+    totalsEl.innerHTML = `<div class="empty">${esc((memberError || sessionsError || activeError).message)}</div>`;
+  } else {
+    adminMembers = new Map((members || []).map((member) => [member.id, member]));
+    const secondsByUser = new Map();
+    (sessions || []).filter((session) => session.ended_at).forEach((session) => {
+      secondsByUser.set(session.user_id, (secondsByUser.get(session.user_id) || 0) + Number(session.duration_seconds || 0));
+    });
+    (activeRows || []).forEach((session) => {
+      const seconds = Math.max(0, Math.floor((Date.now() - Date.parse(session.started_at)) / 1000));
+      secondsByUser.set(session.user_id, (secondsByUser.get(session.user_id) || 0) + seconds);
+    });
+    const { data: globalSeconds, error: globalError } = await supabase.rpc('public_prayer_total_seconds');
+    const memberRows = (members || []).map((member) => {
+      const details = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
+      return `<div class="admin-person-row"><div><b>${esc(member.name || '이름 없는 기도자')}</b><small>${esc(details || '회원정보 미입력')}</small></div><strong>${fmt(secondsByUser.get(member.id) || 0)}</strong><button class="secondary" type="button" onclick="resetMemberPrayerTime('${member.id}')">개인 초기화</button></div>`;
+    }).join('');
+    totalsEl.innerHTML = `${globalError ? '' : `<p class="admin-global-total">전체 누적 <strong>${fmt(Number(globalSeconds || 0))}</strong></p>`}${memberRows || '<div class="empty">등록된 회원이 없어요.</div>'}`;
+  }
+  if (topicsError) { personalEl.innerHTML = `<div class="empty">${esc(topicsError.message)}</div>`; return; }
+  if (!topics?.length) { personalEl.innerHTML = '<div class="empty">등록된 개인 기도제목이 없어요.</div>'; return; }
+  const ids = [...new Set(topics.map((item) => item.user_id))];
+  const { data: personalMembers, error: membersError } = await supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').in('id', ids);
+  if (membersError) { personalEl.innerHTML = `<div class="empty">${esc(membersError.message)}</div>`; return; }
+  const memberById = new Map((personalMembers || []).map((member) => [member.id, member]));
+  personalEl.innerHTML = topics.map((item) => {
+    const member = memberById.get(item.user_id) || {};
+    const metadata = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
+    const date = new Date(item.created_at).toLocaleString('ko-KR');
+    const response = item.response_content
+      ? `<div class="answer-box"><strong>${esc(item.responded_at ? new Date(item.responded_at).toLocaleDateString('ko-KR') : '기도응답')}</strong>${esc(item.response_content)}</div>` : '';
+    return `<article class="topic"><small>${esc(member.name || '이름 없는 기도자')} · ${esc(metadata || '회원정보 미입력')} · ${esc(date)}</small>${esc(item.content)}${response}</article>`;
+  }).join('');
+}
+
+function renderAdminPrayerHistory() {
+  const historyEl = $('#adminPrayerHistory');
+  if (!historyEl) return;
+  historyEl.innerHTML = adminPrayerHistory.length ? adminPrayerHistory.map((item) => {
+    const date = new Date(item.created_at).toLocaleString('ko-KR');
+    const editing = editingSharedPrayerTopicId === item.id;
+    const content = editing
+      ? `<textarea class="field" id="sharedTopicEdit-${item.id}" maxlength="2000">${esc(item.content)}</textarea><div class="topic-actions"><button class="response-button" onclick="saveSharedPrayerTopic('${item.id}')">저장</button><button class="response-button" onclick="cancelSharedPrayerTopicEdit()">취소</button></div>`
+      : `${esc(item.content)}<div class="topic-actions"><button class="response-button" onclick="editSharedPrayerTopic('${item.id}')">수정</button><button class="response-button" onclick="deleteSharedPrayerTopic('${item.id}')">삭제</button></div>`;
+    return `<article class="topic"><small>${esc(date)}${adminPrayerHistory[0]?.id === item.id ? ' · 현재 기도제목' : ''}</small>${content}</article>`;
+  }).join('') : '<div class="empty">아직 게시된 공통 기도제목이 없어요.</div>';
+}
+
+window.editSharedPrayerTopic = (id) => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  editingSharedPrayerTopicId = id;
+  renderAdminPrayerHistory();
+};
+
+window.cancelSharedPrayerTopicEdit = () => {
+  editingSharedPrayerTopicId = null;
+  renderAdminPrayerHistory();
+};
+
+window.saveSharedPrayerTopic = async (id) => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const item = adminPrayerHistory.find((entry) => entry.id === id);
+  const input = document.getElementById(`sharedTopicEdit-${id}`);
+  const content = input?.value.trim();
+  if (!item || !content) return toast('공통 기도제목을 입력해 주세요.');
+  const { error } = await supabase.from('room_prayer_topics').update({ content }).eq('id', id);
+  if (error) return toast(error.message);
+  if (adminPrayerHistory[0]?.id === id && currentPrayerTopic === item.content) {
+    const now = new Date().toISOString();
+    const { error: currentError } = await supabase.from('room_settings').update({ prayer_topic: content, prayer_updated_at: now, updated_at: now }).eq('id', 1);
+    if (currentError) return toast(currentError.message);
+    currentPrayerTopic = content;
+    await loadRoom();
+  }
+  editingSharedPrayerTopicId = null;
+  await loadAdminData();
+  toast('공통 기도제목을 수정했어요.');
+};
+
+window.deleteSharedPrayerTopic = async (id) => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const item = adminPrayerHistory.find((entry) => entry.id === id);
+  if (!item || !window.confirm('이 공통 기도제목 기록을 삭제할까요?')) return;
+  const isCurrent = adminPrayerHistory[0]?.id === id && currentPrayerTopic === item.content;
+  const { error } = await supabase.from('room_prayer_topics').delete().eq('id', id);
+  if (error) return toast(error.message);
+  if (isCurrent) {
+    const fallbackItem = adminPrayerHistory.find((entry) => entry.id !== id);
+    const fallback = fallbackItem?.content || '';
+    const fallbackDate = fallbackItem?.created_at || new Date().toISOString();
+    const { error: currentError } = await supabase.from('room_settings').update({ prayer_topic: fallback, prayer_updated_at: fallbackDate, updated_at: new Date().toISOString() }).eq('id', 1);
+    if (currentError) return toast(currentError.message);
+    currentPrayerTopic = fallback;
+    await loadRoom();
+  }
+  if (editingSharedPrayerTopicId === id) editingSharedPrayerTopicId = null;
+  await loadAdminData();
+  toast('공통 기도제목을 삭제했어요.');
+};
+
+async function saveYouTubeLink() {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const input = $('#youtubeUrl').value.trim();
+  const videoId = youtubeVideoId(input);
+  if (!videoId) return toast('개별 YouTube 영상 링크를 확인해 주세요.');
+  const { error } = await supabase.from('room_settings').update({
+    youtube_url: input,
+    audio_url: null,
+    audio_name: null,
+    updated_at: new Date().toISOString()
+  }).eq('id', 1);
+  if (error) return toast(error.message);
+  $('#uploadStatus').textContent = 'YouTube 영상이 배경음악으로 설정됐어요.';
+  await loadRoom();
+  toast('YouTube 배경음악을 저장했어요.');
+}
+
+async function uploadAudio(event) {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 40 * 1024 * 1024) return toast('음원은 40MB 이하 파일로 선택해 주세요.');
+  $('#uploadStatus').textContent = '업로드 중…';
+  const path = `room/${Date.now()}-${file.name.replace(/[^\w.가-힣-]/g, '_')}`;
+  const { error } = await supabase.storage.from('room-audio').upload(path, file, { upsert: true, contentType: file.type });
+  if (error) { $('#uploadStatus').textContent = error.message; return toast(error.message); }
+  const { data: { publicUrl } } = supabase.storage.from('room-audio').getPublicUrl(path);
+  const { error: settingsError } = await supabase.from('room_settings').update({ audio_url: publicUrl, audio_name: file.name, youtube_url: null }).eq('id', 1);
+  if (settingsError) return toast(settingsError.message);
+  $('#uploadStatus').textContent = `업로드 완료: ${file.name}`;
+  await loadRoom();
+  toast('배경음악을 업데이트했어요.');
+}
+
+$$('.nav [data-page]').forEach((button) => button.addEventListener('click', () => {
+  if (button.dataset.page === 'admin') {
+    if (!user) { adminLoginPending = true; window.openAuth('login'); return; }
+    if (profile?.role !== 'admin') return toast('관리자 계정만 들어갈 수 있어요.');
+    return page('admin');
+  }
+  if (button.dataset.page === 'mypage') {
+    if (!user) { page('mypage'); return; }
+    $('#reauthModal').classList.add('open');
+    $('#reauthPassword').focus();
+    return;
+  }
+  page(button.dataset.page);
+}));
+$$('[data-auth-tab]').forEach((button) => button.addEventListener('click', () => authTab(button.dataset.authTab)));
+$('#goRoom').addEventListener('click', () => page('room'));
+$('#authButton').addEventListener('click', () => window.openAuth('login'));
+$('#logoutButton').addEventListener('click', async () => {
+  if (activeSessionId) await stopPrayer();
+  stopRoomPresence();
+  await supabase.auth.signOut();
+  user = null; profile = null; await init(); page('home'); toast('로그아웃했어요.');
+});
+$('#closeModal').addEventListener('click', () => $('#authModal').classList.remove('open'));
+$('#authModal').addEventListener('click', (event) => { if (event.target === $('#authModal')) $('#authModal').classList.remove('open'); });
+$('#verifyEmailBtn').addEventListener('click', sendVerificationEmail);
+$('#signupForm').addEventListener('submit', completeSignup);
+$('#signupForm [name="email"]').addEventListener('input', refreshSignupGate);
+$('#loginForm').addEventListener('submit', login);
+$('#reauthForm').addEventListener('submit', reauthenticate);
+$('#closeReauth').addEventListener('click', () => $('#reauthModal').classList.remove('open'));
+$('#profileForm').addEventListener('submit', saveProfile);
+$('#requestEmailChange').addEventListener('click', requestEmailChange);
+$('#confirmEmailChange').addEventListener('click', confirmEmailChange);
+$('#saveTopic').addEventListener('click', saveTopic);
+$('#startBtn').addEventListener('click', beginPrayer);
+$('#stopBtn').addEventListener('click', stopPrayer);
+$('#saveAdminTopic').addEventListener('click', saveAdminTopic);
+$('#resetAllPrayerTime').addEventListener('click', () => window.resetAllPrayerTime());
+$('#saveYoutubeLink').addEventListener('click', saveYouTubeLink);
+$('#audioFile').addEventListener('change', uploadAudio);
+$$('input[type="tel"]').forEach((input) => input.addEventListener('input', () => { input.value = phoneFormat(input.value); }));
+$('#loginForm [name="identifier"]').addEventListener('input', (event) => {
+  if (!event.target.value.includes('@')) event.target.value = phoneFormat(event.target.value);
+});
+window.addEventListener('focus', () => {
+  if ($('#room').classList.contains('active')) {
+    refreshPresence();
+    startRoomPresence();
+  }
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && $('#room').classList.contains('active')) {
+    refreshPresence();
+    startRoomPresence();
+  }
+});
+supabase?.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') setTimeout(init, 0);
+});
+
+try {
+  ({ createClient } = await import('https://esm.sh/@supabase/supabase-js@2'));
+  const response = await fetch('/.netlify/functions/config');
+  const config = response.ok ? await response.json() : null;
+  if (config?.url && config?.anonKey) {
+    supabase = createClient(config.url, config.anonKey);
+    configured = true;
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') setTimeout(init, 0);
+    });
+  }
+} catch (error) {
+  console.error('Prayer room startup failed:', error);
+  toast('사이트 기능을 불러오지 못했어요. 인터넷 연결과 배포 파일을 확인해 주세요.');
+}
+if (supabase) await init();
+else console.warn('Supabase config function did not return a URL and anon key.');
+
+</script>
+</body></html>
+
+
+
 
 
 
