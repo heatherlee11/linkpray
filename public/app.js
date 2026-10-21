@@ -39,6 +39,7 @@ function page(id) {
   $$('.nav [data-page]').forEach((button) => button.classList.toggle('active', button.dataset.page === id));
   window.scrollTo(0, 0);
   if (id === 'mypage') loadMine();
+  if (id === 'admin' && profile?.role === 'admin') loadAdminData();
 }
 
 function authTab(tab) {
@@ -457,10 +458,48 @@ async function saveTopic() {
 
 async function saveAdminTopic() {
   if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
-  const { error } = await supabase.from('room_settings').upsert({ id: 1, prayer_topic: $('#adminTopic').value.trim(), updated_at: new Date().toISOString() });
+  const content = $('#adminTopic').value.trim();
+  if (!content) return toast('공통 기도제목을 입력해 주세요.');
+  const { error: historyError } = await supabase.from('room_prayer_topics').insert({ content, created_by: user.id });
+  if (historyError) return toast(historyError.message);
+  const { error } = await supabase.from('room_settings').upsert({ id: 1, prayer_topic: content, updated_at: new Date().toISOString() });
   if (error) return toast(error.message);
+  $('#adminTopic').value = '';
   await loadRoom();
+  await loadAdminData();
   toast('공통 기도제목을 게시했어요.');
+}
+
+async function loadAdminData() {
+  if (profile?.role !== 'admin') return;
+  const historyEl = $('#adminPrayerHistory');
+  const personalEl = $('#adminPersonalTopics');
+  if (!historyEl || !personalEl) return;
+  historyEl.innerHTML = '<div class="empty">불러오는 중…</div>';
+  personalEl.innerHTML = '<div class="empty">불러오는 중…</div>';
+  const [{ data: history, error: historyError }, { data: topics, error: topicsError }] = await Promise.all([
+    supabase.from('room_prayer_topics').select('id,content,created_at,created_by').order('created_at', { ascending: false }),
+    supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false })
+  ]);
+  if (historyError) historyEl.innerHTML = `<div class="empty">${esc(historyError.message)}</div>`;
+  else historyEl.innerHTML = history?.length ? history.map((item) => {
+    const date = new Date(item.created_at).toLocaleString('ko-KR');
+    return `<article class="topic"><small>${esc(date)}</small>${esc(item.content)}</article>`;
+  }).join('') : '<div class="empty">아직 게시된 공통 기도제목이 없어요.</div>';
+  if (topicsError) { personalEl.innerHTML = `<div class="empty">${esc(topicsError.message)}</div>`; return; }
+  if (!topics?.length) { personalEl.innerHTML = '<div class="empty">등록된 개인 기도제목이 없어요.</div>'; return; }
+  const ids = [...new Set(topics.map((item) => item.user_id))];
+  const { data: members, error: membersError } = await supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').in('id', ids);
+  if (membersError) { personalEl.innerHTML = `<div class="empty">${esc(membersError.message)}</div>`; return; }
+  const memberById = new Map((members || []).map((member) => [member.id, member]));
+  personalEl.innerHTML = topics.map((item) => {
+    const member = memberById.get(item.user_id) || {};
+    const metadata = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
+    const date = new Date(item.created_at).toLocaleString('ko-KR');
+    const response = item.response_content
+      ? `<div class="answer-box"><strong>${esc(item.responded_at ? new Date(item.responded_at).toLocaleDateString('ko-KR') : '기도응답')}</strong>${esc(item.response_content)}</div>` : '';
+    return `<article class="topic"><small>${esc(member.name || '이름 없는 기도자')} · ${esc(metadata || '회원정보 미입력')} · ${esc(date)}</small>${esc(item.content)}${response}</article>`;
+  }).join('');
 }
 
 async function uploadAudio(event) {
