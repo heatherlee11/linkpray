@@ -3,7 +3,7 @@ create table if not exists public.profiles (id uuid primary key references auth.
 create table if not exists public.prayer_sessions (id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,started_at timestamptz not null default now(),ended_at timestamptz,duration_seconds integer not null default 0 check(duration_seconds>=0));
 create table if not exists public.active_prayers (user_id uuid primary key references auth.users(id) on delete cascade,display_name text not null,session_id uuid not null references public.prayer_sessions(id) on delete cascade,started_at timestamptz not null default now());
 create table if not exists public.personal_prayer_topics (id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,content text not null check(length(content)<=2000),created_at timestamptz not null default now(),response_content text,responded_at timestamptz);
-create table if not exists public.room_settings (id integer primary key check(id=1),prayer_topic text not null default '',prayer_updated_at timestamptz not null default now(),audio_url text,audio_name text,updated_at timestamptz not null default now());
+create table if not exists public.room_settings (id integer primary key check(id=1),prayer_topic text not null default '',prayer_updated_at timestamptz not null default now(),audio_url text,audio_name text,youtube_url text,updated_at timestamptz not null default now());
 create table if not exists public.room_prayer_topics (id uuid primary key default gen_random_uuid(),content text not null check(length(content)<=2000),created_by uuid references public.profiles(id) on delete set null,created_at timestamptz not null default now());
 insert into public.room_settings(id) values(1) on conflict do nothing;
 create or replace function public.is_pray_admin() returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='admin'); $$;
@@ -16,6 +16,7 @@ create policy "profile owner read" on public.profiles for select to authenticate
 create policy "profile owner update" on public.profiles for update to authenticated using(id=auth.uid()) with check(id=auth.uid() and (role='member' or public.is_pray_admin()));
 create policy "profile admin read" on public.profiles for select to authenticated using(public.is_pray_admin());
 create policy "session own select" on public.prayer_sessions for select to authenticated using(user_id=auth.uid());
+create policy "session admin read" on public.prayer_sessions for select to authenticated using(public.is_pray_admin());
 create policy "session own insert" on public.prayer_sessions for insert to authenticated with check(user_id=auth.uid());
 create policy "session own update" on public.prayer_sessions for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
 create policy "session own delete" on public.prayer_sessions for delete to authenticated using(user_id=auth.uid());
@@ -36,11 +37,14 @@ create policy "room prayer topics admin update" on public.room_prayer_topics for
 create policy "room prayer topics admin delete" on public.room_prayer_topics for delete to authenticated using(public.is_pray_admin());
 create or replace function public.public_prayer_total_seconds() returns bigint language sql stable security definer set search_path=public as $$ select (coalesce((select sum(duration_seconds) from public.prayer_sessions where ended_at is not null),0) + coalesce((select sum(extract(epoch from (now()-started_at))::bigint) from public.active_prayers),0))::bigint; $$;
 grant execute on function public.public_prayer_total_seconds() to anon,authenticated;
+create or replace function public.admin_reset_prayer_time(target_user_id uuid default null) returns void language plpgsql security definer set search_path=public as $$ begin if not public.is_pray_admin() then raise exception '관리자 권한이 필요합니다'; end if; if target_user_id is not null and not exists(select 1 from public.profiles where id=target_user_id) then raise exception '회원을 찾을 수 없습니다'; end if; delete from public.prayer_sessions where ended_at is not null and (target_user_id is null or user_id=target_user_id); update public.prayer_sessions set started_at=now(),duration_seconds=0 where ended_at is null and (target_user_id is null or user_id=target_user_id); update public.active_prayers set started_at=now() where target_user_id is null or user_id=target_user_id; update public.room_settings set updated_at=now() where id=1; end; $$;
+grant execute on function public.admin_reset_prayer_time(uuid) to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('room-audio','room-audio',true,41943040,array['audio/mpeg','audio/mp4','audio/aac','audio/ogg','audio/wav','audio/x-wav','audio/webm']) on conflict(id) do update set public=true,file_size_limit=41943040;
 create policy "public can read room audio" on storage.objects for select to anon,authenticated using(bucket_id='room-audio');
 create policy "admins upload room audio" on storage.objects for insert to authenticated with check(bucket_id='room-audio' and public.is_pray_admin());
 create policy "admins update room audio" on storage.objects for update to authenticated using(bucket_id='room-audio' and public.is_pray_admin());
 create policy "admins delete room audio" on storage.objects for delete to authenticated using(bucket_id='room-audio' and public.is_pray_admin());
 alter publication supabase_realtime add table public.active_prayers;
+alter publication supabase_realtime add table public.room_settings;
 
 

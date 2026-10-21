@@ -14,6 +14,40 @@ const phoneFormat = (value) => {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 };
 const phoneDigits = (value) => String(value || '').replace(/\D/g, '');
+function youtubeVideoId(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.replace(/^www\./, '').toLowerCase();
+    if (host === 'youtu.be') return url.pathname.split('/').filter(Boolean)[0]?.match(/^[A-Za-z0-9_-]{11}$/)?.[0] || null;
+    if (!['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtube-nocookie.com'].includes(host)) return null;
+    const watchId = url.searchParams.get('v');
+    if (watchId && /^[A-Za-z0-9_-]{11}$/.test(watchId)) return watchId;
+    return url.pathname.match(/\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})(?:$|\/)/)?.[1] || null;
+  } catch { return null; }
+}
+
+function youtubeEmbedUrl(videoId) {
+  const params = new URLSearchParams({ autoplay: '0', controls: '1', enablejsapi: '1', loop: '1', playlist: videoId, playsinline: '1', origin: window.location.origin });
+  return `https://www.youtube.com/embed/${videoId}?${params}`;
+}
+
+function sendYouTubeCommand(func) {
+  if ($('#youtubeWrap').classList.contains('hidden')) return;
+  $('#youtubePlayer').contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), 'https://www.youtube.com');
+}
+
+function startPrayerMusic() {
+  if (!$('#youtubeWrap').classList.contains('hidden')) {
+    sendYouTubeCommand('playVideo');
+    return;
+  }
+  if ($('#audio').getAttribute('src')) $('#audio').play().catch(() => toast('음악 플레이어의 재생 버튼을 눌러주세요.'));
+}
+
+function pausePrayerMusic() {
+  $('#audio').pause();
+  sendYouTubeCommand('pauseVideo');
+}
 
 let supabase = null;
 let configured = false;
@@ -35,6 +69,7 @@ let roomPresenceTracked = false;
 let roomVisitors = [];
 let activePrayerPeople = [];
 let prayingUserIds = new Set();
+let adminMembers = new Map();
 
 function toast(message) {
   const element = $('#toast');
@@ -196,6 +231,7 @@ async function loadRoom() {
   if (!configured) return;
   const { data: settings } = await supabase.from('room_settings').select('*').eq('id', 1).maybeSingle();
   if (settings) {
+    $('#youtubeUrl').value = settings.youtube_url || '';
     currentPrayerTopic = settings.prayer_topic || '';
     $('#roomTopic').textContent = settings.prayer_topic || '주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.';
     if (settings.prayer_topic) {
@@ -205,17 +241,38 @@ async function loadRoom() {
     } else {
       $('#topicBy').textContent = '기도제목을 마음에 담고 잠시 머물러 보세요.';
     }
-    if (settings.audio_url) {
-      $('#audio').src = settings.audio_url;
+    const videoId = settings.youtube_url ? youtubeVideoId(settings.youtube_url) : null;
+    if (videoId) {
+      const embedUrl = youtubeEmbedUrl(videoId);
+      if ($('#youtubePlayer').src !== embedUrl) $('#youtubePlayer').src = embedUrl;
+      $('#youtubeWrap').classList.remove('hidden');
+      $('#audio').classList.add('hidden');
+      $('#musicName').textContent = 'YouTube 배경음악';
+    } else {
+      $('#youtubeWrap').classList.add('hidden');
+      $('#youtubePlayer').removeAttribute('src');
+      $('#audio').classList.toggle('hidden', !settings.audio_url);
       $('#musicName').textContent = settings.audio_name || '배경음악';
+    }
+    if (settings.audio_url && !videoId) {
+      $('#audio').src = settings.audio_url;
+    } else if (!videoId) {
+      $('#audio').removeAttribute('src');
     }
   }
   await refreshPresence();
   await refreshTotal();
   if (!window.prayerRoomChannel) {
     window.prayerRoomChannel = supabase.channel('prayer-room-data')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'active_prayers' }, refreshPresence)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_settings' }, loadRoom)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'active_prayers' }, async () => {
+        await refreshPresence();
+        await refreshTotal();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_settings' }, async () => {
+        await loadRoom();
+        await refreshTotal();
+        if (user) await loadMine();
+      })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') refreshPresence();
       });
@@ -233,10 +290,19 @@ async function loadRoom() {
 }
 
 async function refreshPresence() {
-  const { data, error } = await supabase.from('active_prayers').select('user_id,display_name,started_at');
+  const { data, error } = await supabase.from('active_prayers').select('user_id,display_name,started_at,session_id');
   if (error) return;
   activePrayerPeople = data || [];
   prayingUserIds = new Set(activePrayerPeople.map((person) => person.user_id));
+  const myLivePrayer = activeSessionId && activePrayerPeople.find((person) => person.user_id === user?.id && person.session_id === activeSessionId);
+  if (myLivePrayer) {
+    const serverStartedAt = Date.parse(myLivePrayer.started_at);
+    if (Number.isFinite(serverStartedAt) && serverStartedAt !== activeStartedAt) {
+      activeStartedAt = serverStartedAt;
+      startTicker();
+      loadMine();
+    }
+  }
   const state = roomPresenceChannel?.presenceState?.() || {};
   const visitorById = new Map();
   Object.values(state).flat().forEach((visitor) => {
@@ -377,16 +443,18 @@ async function beginPrayer() {
   if (!user) return window.openAuth('login');
   if (activeSessionId) return;
   const clickedAt = Date.now();
+  startPrayerMusic();
   const startedAt = new Date(clickedAt).toISOString();
   const { data: session, error } = await supabase.from('prayer_sessions')
     .insert({ user_id: user.id, started_at: startedAt }).select('id,started_at').single();
-  if (error) return toast(error.message);
+  if (error) { pausePrayerMusic(); return toast(error.message); }
   const { error: presenceError } = await supabase.from('active_prayers').upsert({
     user_id: user.id, display_name: profile?.name || user.user_metadata?.name || '기도자',
     session_id: session.id, started_at: session.started_at
   });
   if (presenceError) {
     await supabase.from('prayer_sessions').delete().eq('id', session.id);
+    pausePrayerMusic();
     return toast(presenceError.message);
   }
   activeSessionId = session.id;
@@ -397,11 +465,6 @@ async function beginPrayer() {
   $('#timerHint').textContent = '기도 중 · 기도 마치기를 누르면 시간이 저장됩니다';
   // Start the visible clock before waiting for the browser's audio permission.
   startTicker();
-  try {
-    await $('#audio').play();
-  } catch {
-    toast('브라우저가 자동재생을 막았어요. 음악 플레이어의 재생 버튼을 눌러주세요.');
-  }
   await refreshPresence();
   toast('기도시간 기록을 시작했어요.');
 }
@@ -417,7 +480,7 @@ async function stopPrayer() {
   const { error: presenceError } = await supabase.from('active_prayers').delete().eq('user_id', user.id);
   activeSessionId = null;
   activeStartedAt = 0;
-  $('#audio').pause();
+  pausePrayerMusic();
   $('#timer').textContent = '00:00:00';
   $('#timerHint').textContent = '로그인 후 기도를 시작할 수 있어요';
   $('#startBtn').classList.remove('hidden');
@@ -557,6 +620,33 @@ async function saveAdminTopic() {
   toast('공통 기도제목을 게시했어요.');
 }
 
+window.resetAllPrayerTime = async () => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  if (!window.confirm('모든 회원의 완료된 기도 기록을 삭제해 전체 누적을 초기화할까요? 진행 중인 기도는 이 시각부터 다시 계산됩니다.')) return;
+  const { error } = await supabase.rpc('admin_reset_prayer_time', { target_user_id: null });
+  if (error) return toast(error.message);
+  await refreshTotal();
+  await refreshPresence();
+  await loadAdminData();
+  if (user) await loadMine();
+  toast('전체 기도시간을 초기화했어요.');
+};
+
+window.resetMemberPrayerTime = async (memberId) => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const member = adminMembers.get(memberId);
+  if (!member) return toast('회원을 찾을 수 없어요.');
+  const memberName = member.name || '이 회원';
+  if (!window.confirm(`${memberName}님의 완료된 기도 기록을 삭제해 누적을 초기화할까요? 진행 중인 기도는 이 시각부터 다시 계산됩니다.`)) return;
+  const { error } = await supabase.rpc('admin_reset_prayer_time', { target_user_id: memberId });
+  if (error) return toast(error.message);
+  await refreshTotal();
+  await refreshPresence();
+  await loadAdminData();
+  if (memberId === user.id) await loadMine();
+  toast(`${memberName}님의 기도시간을 초기화했어요.`);
+};
+
 async function loadAdminData() {
   if (profile?.role !== 'admin') return;
   const historyEl = $('#adminPrayerHistory');
@@ -564,14 +654,37 @@ async function loadAdminData() {
   if (!historyEl || !personalEl) return;
   historyEl.innerHTML = '<div class="empty">불러오는 중…</div>';
   personalEl.innerHTML = '<div class="empty">불러오는 중…</div>';
-  const [{ data: history, error: historyError }, { data: topics, error: topicsError }] = await Promise.all([
+  const [{ data: history, error: historyError }, { data: topics, error: topicsError }, { data: members, error: memberError }, { data: sessions, error: sessionsError }, { data: activeRows, error: activeError }] = await Promise.all([
     supabase.from('room_prayer_topics').select('id,content,created_at,created_by').order('created_at', { ascending: false }),
-    supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false })
+    supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false }),
+    supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').order('name'),
+    supabase.from('prayer_sessions').select('user_id,started_at,ended_at,duration_seconds'),
+    supabase.from('active_prayers').select('user_id,started_at')
   ]);
   if (historyError) historyEl.innerHTML = `<div class="empty">${esc(historyError.message)}</div>`;
   else {
     adminPrayerHistory = history || [];
     renderAdminPrayerHistory();
+  }
+  const totalsEl = $('#adminPrayerTotals');
+  if (memberError || sessionsError || activeError) {
+    totalsEl.innerHTML = `<div class="empty">${esc((memberError || sessionsError || activeError).message)}</div>`;
+  } else {
+    adminMembers = new Map((members || []).map((member) => [member.id, member]));
+    const secondsByUser = new Map();
+    (sessions || []).filter((session) => session.ended_at).forEach((session) => {
+      secondsByUser.set(session.user_id, (secondsByUser.get(session.user_id) || 0) + Number(session.duration_seconds || 0));
+    });
+    (activeRows || []).forEach((session) => {
+      const seconds = Math.max(0, Math.floor((Date.now() - Date.parse(session.started_at)) / 1000));
+      secondsByUser.set(session.user_id, (secondsByUser.get(session.user_id) || 0) + seconds);
+    });
+    const { data: globalSeconds, error: globalError } = await supabase.rpc('public_prayer_total_seconds');
+    const memberRows = (members || []).map((member) => {
+      const details = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
+      return `<div class="admin-person-row"><div><b>${esc(member.name || '이름 없는 기도자')}</b><small>${esc(details || '회원정보 미입력')}</small></div><strong>${fmt(secondsByUser.get(member.id) || 0)}</strong><button class="secondary" type="button" onclick="resetMemberPrayerTime('${member.id}')">개인 초기화</button></div>`;
+    }).join('');
+    totalsEl.innerHTML = `${globalError ? '' : `<p class="admin-global-total">전체 누적 <strong>${fmt(Number(globalSeconds || 0))}</strong></p>`}${memberRows || '<div class="empty">등록된 회원이 없어요.</div>'}`;
   }
   if (topicsError) { personalEl.innerHTML = `<div class="empty">${esc(topicsError.message)}</div>`; return; }
   if (!topics?.length) { personalEl.innerHTML = '<div class="empty">등록된 개인 기도제목이 없어요.</div>'; return; }
@@ -654,6 +767,23 @@ window.deleteSharedPrayerTopic = async (id) => {
   toast('공통 기도제목을 삭제했어요.');
 };
 
+async function saveYouTubeLink() {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const input = $('#youtubeUrl').value.trim();
+  const videoId = youtubeVideoId(input);
+  if (!videoId) return toast('개별 YouTube 영상 링크를 확인해 주세요.');
+  const { error } = await supabase.from('room_settings').update({
+    youtube_url: input,
+    audio_url: null,
+    audio_name: null,
+    updated_at: new Date().toISOString()
+  }).eq('id', 1);
+  if (error) return toast(error.message);
+  $('#uploadStatus').textContent = 'YouTube 영상이 배경음악으로 설정됐어요.';
+  await loadRoom();
+  toast('YouTube 배경음악을 저장했어요.');
+}
+
 async function uploadAudio(event) {
   if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
   const file = event.target.files[0];
@@ -664,7 +794,7 @@ async function uploadAudio(event) {
   const { error } = await supabase.storage.from('room-audio').upload(path, file, { upsert: true, contentType: file.type });
   if (error) { $('#uploadStatus').textContent = error.message; return toast(error.message); }
   const { data: { publicUrl } } = supabase.storage.from('room-audio').getPublicUrl(path);
-  const { error: settingsError } = await supabase.from('room_settings').update({ audio_url: publicUrl, audio_name: file.name }).eq('id', 1);
+  const { error: settingsError } = await supabase.from('room_settings').update({ audio_url: publicUrl, audio_name: file.name, youtube_url: null }).eq('id', 1);
   if (settingsError) return toast(settingsError.message);
   $('#uploadStatus').textContent = `업로드 완료: ${file.name}`;
   await loadRoom();
@@ -709,6 +839,8 @@ $('#saveTopic').addEventListener('click', saveTopic);
 $('#startBtn').addEventListener('click', beginPrayer);
 $('#stopBtn').addEventListener('click', stopPrayer);
 $('#saveAdminTopic').addEventListener('click', saveAdminTopic);
+$('#resetAllPrayerTime').addEventListener('click', () => window.resetAllPrayerTime());
+$('#saveYoutubeLink').addEventListener('click', saveYouTubeLink);
 $('#audioFile').addEventListener('change', uploadAudio);
 $$('input[type="tel"]').forEach((input) => input.addEventListener('input', () => { input.value = phoneFormat(input.value); }));
 $('#loginForm [name="identifier"]').addEventListener('input', (event) => {

@@ -9,7 +9,7 @@
 - netlify/functions/ : Supabase 설정 반환 및 연락처 로그인 함수
 - supabase-setup.sql : 최초 DB 설정
 - supabase-update-prayer-responses.sql : 기존 DB에 기도응답 열 추가
-- supabase-admin-prayer-update.sql : 기존 DB 관리자 RLS 수정, 공통 기도제목 기록/수정/삭제, 관리자 개인 기도제목 보기 추가
+- supabase-admin-prayer-update.sql : 기존 DB 관리자 RLS 수정, 공통 기도제목 기록/수정/삭제, 관리자 개인 기도제목 보기, 전체/개인 기도시간 초기화, YouTube 링크 열 추가
 
 기존 GitHub 저장소에 업데이트할 때
 압축을 풀고 ZIP 안의 모든 파일/폴더를 저장소 루트에 복사해 덮어쓴 뒤 commit/push 합니다. Netlify가 자동으로 새 배포를 시작합니다. Build command는 비워두고 netlify.toml이 적용되게 둡니다.
@@ -24,7 +24,7 @@ Supabase 최초 설정
 SQL Editor에서 supabase-update-prayer-responses.sql을 한 번 실행합니다. 최초 설치가 아니라면 supabase-setup.sql을 다시 실행하지 마세요.
 
 기존 프로젝트에서 관리자 기능 업데이트
-1. SQL Editor에서 최신 supabase-admin-prayer-update.sql 전체를 실행합니다. 이전 버전의 업데이트 SQL을 실행했더라도 다시 실행해 수정/삭제 권한을 반영하세요. 관리자 글쓰기 RLS 오류를 수정하고, 기존 공통 기도제목을 기록에 옮기며, 관리자 개인 기도제목 조회 권한을 추가합니다.
+1. SQL Editor에서 최신 supabase-admin-prayer-update.sql 전체를 실행합니다. 이전 버전의 업데이트 SQL을 실행했더라도 다시 실행해 수정/삭제 권한과 기도시간 초기화/YouTube 링크 기능을 반영하세요. 기존 관리자 RLS 오류를 수정하고 기존 공통 기도제목 기록도 보존합니다.
 2. ZIP의 파일을 기존 GitHub 저장소 루트에 복사해 덮어쓰고 commit/push 합니다. Netlify 새 배포가 끝나면 관리자 계정에서 확인합니다.
 
 Netlify 환경변수
@@ -48,5 +48,7 @@ SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (비밀키, 코드/GitHub�
 - 기도 응답 기능을 위해 personal_prayer_topics에 response_content / responded_at 열이 추가됩니다.
 - 공통 기도제목은 게시 날짜와 함께 기도실에 표시되고, 관리자 화면에서 누적 기록을 수정하거나 삭제할 수 있습니다.
 - 로그인한 사용자가 기도실에 들어오면 Supabase Realtime Presence로 이름을 즉시 공유하며, 화면이 열려 있는 동안 기도 중 상태도 5초 간격으로 갱신합니다.
+- 관리자는 전체 또는 회원별 누적 기도시간을 초기화할 수 있습니다. 초기화 시 완료된 기도기록은 삭제되고 진행 중인 기도는 초기화 시점부터 계산됩니다.
+- 관리자 배경음악 설정은 업로드 음원 또는 개별 YouTube 영상 링크 중 하나를 사용합니다. YouTube 플레이어는 기도 시작 버튼을 눌러 재생합니다.
 - 개인 프로필, 기도기록, 기도제목은 RLS로 본인만 조회할 수 있고, 관리자 계정은 개인 기도제목과 이름/그룹 정보를 관리자 화면에서 확인할 수 있습니다. 현재 기도 중인 이름과 전체 누적 시간은 공개됩니다.
 - 관리자 음원은 40MB 이하 파일을 올리고, 사용 허가를 받은 음원만 이용하세요.

@@ -78,6 +78,39 @@ set prayer_updated_at = coalesce(
 where s.prayer_updated_at is null;
 alter table public.room_settings alter column prayer_updated_at set default now();
 alter table public.room_settings alter column prayer_updated_at set not null;
+alter table public.room_settings add column if not exists youtube_url text;
+
+-- Admin dashboard needs read access to sessions to show individual totals.
+drop policy if exists "session admin read" on public.prayer_sessions;
+create policy "session admin read" on public.prayer_sessions
+  for select to authenticated using (public.is_pray_admin());
+
+-- Reset completed totals and restart any prayer sessions currently in progress.
+create or replace function public.admin_reset_prayer_time(target_user_id uuid default null)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_pray_admin() then
+    raise exception '관리자 권한이 필요합니다';
+  end if;
+  if target_user_id is not null and not exists (
+    select 1 from public.profiles where id = target_user_id
+  ) then
+    raise exception '회원을 찾을 수 없습니다';
+  end if;
+  delete from public.prayer_sessions
+  where ended_at is not null and (target_user_id is null or user_id = target_user_id);
+  update public.prayer_sessions set started_at = now(), duration_seconds = 0
+  where ended_at is null and (target_user_id is null or user_id = target_user_id);
+  update public.active_prayers set started_at = now()
+  where target_user_id is null or user_id = target_user_id;
+  update public.room_settings set updated_at = now() where id = 1;
+end;
+$$;
+grant execute on function public.admin_reset_prayer_time(uuid) to authenticated;
 
 -- Admins can view all member prayer topics; members retain their own access.
 alter table public.personal_prayer_topics
@@ -100,3 +133,14 @@ drop policy if exists "admins delete room audio" on storage.objects;
 create policy "admins delete room audio" on storage.objects
   for delete to authenticated
   using (bucket_id = 'room-audio' and public.is_pray_admin());
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'room_settings'
+  ) then
+    alter publication supabase_realtime add table public.room_settings;
+  end if;
+end;
+$$;
