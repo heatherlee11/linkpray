@@ -1,8 +1,8 @@
 export default async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
-  const url = Netlify.env.get('SUPABASE_URL');
-  const anon = Netlify.env.get('SUPABASE_ANON_KEY');
-  const service = Netlify.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const url = process.env.SUPABASE_URL;
+  const anon = process.env.SUPABASE_ANON_KEY;
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !anon || !service) return Response.json({ error: 'Netlify 환경변수 설정이 필요합니다.' }, { status: 500 });
   try {
     const { phone, password } = await req.json();

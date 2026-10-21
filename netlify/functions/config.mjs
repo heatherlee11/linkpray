@@ -1,6 +1,6 @@
 export default async () => {
-  const url = Netlify.env.get('SUPABASE_URL') || '';
-  const anonKey = Netlify.env.get('SUPABASE_ANON_KEY') || '';
+  const url = process.env.SUPABASE_URL || '';
+  const anonKey = process.env.SUPABASE_ANON_KEY || '';
   return Response.json({ url, anonKey }, {
     headers: { 'Cache-Control': 'public, max-age=300' }
   });

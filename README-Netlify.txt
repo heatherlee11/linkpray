@@ -2,7 +2,8 @@
 =======================================
 
 파일 구성
-- index.html : Netlify 시작 페이지 (단독 HTML 파일은 link-pray-room.html)
+- public/index.html : Netlify 공개 시작 페이지
+- public/link-pray-room.html : HTML 파일 사본
 - netlify.toml 및 netlify/functions/ : Netlify 설정, 공개 설정 반환 및 연락처 로그인 함수
 - supabase-setup.sql : 계정/기도기록/권한/음원 저장소 준비 SQL
 
@@ -11,6 +12,7 @@
 1. 이 outputs 폴더의 파일과 netlify 폴더를 통째로 GitHub 저장소에 올립니다.
    index.html이 배포 시작 페이지입니다.
    (또는 Netlify publish directory에서 파일을 index.html로 제공하는 별도 폴더를 지정합니다.)
+   netlify.toml은 public 폴더만 공개하고 Netlify Functions는 별도 배포하도록 구성되어 있습니다.
 2. Netlify에서 저장소를 Import 해 배포합니다. 빌드 명령은 비워두고 publish directory는 저장소 루트로 둡니다.
 3. Supabase 프로젝트를 만들고 SQL Editor에서 supabase-setup.sql 전체를 실행합니다.
 4. Supabase > Authentication > URL Configuration에서 Site URL과 Redirect URL에 배포된 Netlify 주소를 등록합니다.
