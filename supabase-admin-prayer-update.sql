@@ -41,7 +41,7 @@ create table if not exists public.room_prayer_topics (
   created_at timestamptz not null default now()
 );
 alter table public.room_prayer_topics enable row level security;
-grant select, insert on public.room_prayer_topics to authenticated;
+grant select, insert, update, delete on public.room_prayer_topics to authenticated;
 drop policy if exists "room prayer topics admin read" on public.room_prayer_topics;
 create policy "room prayer topics admin read" on public.room_prayer_topics
   for select to authenticated using (public.is_pray_admin());
@@ -49,6 +49,14 @@ drop policy if exists "room prayer topics admin insert" on public.room_prayer_to
 create policy "room prayer topics admin insert" on public.room_prayer_topics
   for insert to authenticated
   with check (public.is_pray_admin() and created_by = auth.uid());
+drop policy if exists "room prayer topics admin update" on public.room_prayer_topics;
+create policy "room prayer topics admin update" on public.room_prayer_topics
+  for update to authenticated
+  using (public.is_pray_admin())
+  with check (public.is_pray_admin());
+drop policy if exists "room prayer topics admin delete" on public.room_prayer_topics;
+create policy "room prayer topics admin delete" on public.room_prayer_topics
+  for delete to authenticated using (public.is_pray_admin());
 
 -- Preserve the current shared topic as the first history entry, if present.
 insert into public.room_prayer_topics(content, created_at)
@@ -58,6 +66,18 @@ where id = 1 and length(trim(prayer_topic)) > 0
   and not exists (
     select 1 from public.room_prayer_topics h where h.content = room_settings.prayer_topic
   );
+alter table public.room_settings
+  add column if not exists prayer_updated_at timestamptz;
+update public.room_settings s
+set prayer_updated_at = coalesce(
+  (select h.created_at from public.room_prayer_topics h
+   where h.content = s.prayer_topic order by h.created_at desc limit 1),
+  s.updated_at,
+  now()
+)
+where s.prayer_updated_at is null;
+alter table public.room_settings alter column prayer_updated_at set default now();
+alter table public.room_settings alter column prayer_updated_at set not null;
 
 -- Admins can view all member prayer topics; members retain their own access.
 alter table public.personal_prayer_topics

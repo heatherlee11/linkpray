@@ -26,6 +26,15 @@ let prayerTicker = null;
 let adminLoginPending = false;
 let initialized = false;
 let roomPollerStarted = false;
+let currentPrayerTopic = '';
+let adminPrayerHistory = [];
+let editingSharedPrayerTopicId = null;
+let roomPresenceChannel = null;
+let roomPresenceStatus = 'CLOSED';
+let roomPresenceTracked = false;
+let roomVisitors = [];
+let activePrayerPeople = [];
+let prayingUserIds = new Set();
 
 function toast(message) {
   const element = $('#toast');
@@ -40,6 +49,12 @@ function page(id) {
   window.scrollTo(0, 0);
   if (id === 'mypage') loadMine();
   if (id === 'admin' && profile?.role === 'admin') loadAdminData();
+  if (id === 'room') {
+    refreshPresence();
+    startRoomPresence();
+  } else {
+    stopRoomPresence();
+  }
 }
 
 function authTab(tab) {
@@ -157,6 +172,7 @@ async function init() {
     await loadMine();
     await restoreActivePrayer();
   }
+  if ($('#room').classList.contains('active')) startRoomPresence();
   if (adminLoginPending && user) {
     adminLoginPending = false;
     if (profile?.role === 'admin') page('admin');
@@ -180,8 +196,15 @@ async function loadRoom() {
   if (!configured) return;
   const { data: settings } = await supabase.from('room_settings').select('*').eq('id', 1).maybeSingle();
   if (settings) {
+    currentPrayerTopic = settings.prayer_topic || '';
     $('#roomTopic').textContent = settings.prayer_topic || '주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.';
-    $('#topicBy').textContent = settings.prayer_topic ? '관리자가 나눈 오늘의 기도제목' : '기도제목을 마음에 담고 잠시 머물러 보세요.';
+    if (settings.prayer_topic) {
+      const posted = new Date(settings.prayer_updated_at || settings.updated_at || Date.now());
+      const postedDate = `${posted.getFullYear()}년 ${String(posted.getMonth() + 1).padStart(2, '0')}월 ${String(posted.getDate()).padStart(2, '0')}일`;
+      $('#topicBy').textContent = `${postedDate} 오늘의 기도제목`;
+    } else {
+      $('#topicBy').textContent = '기도제목을 마음에 담고 잠시 머물러 보세요.';
+    }
     if (settings.audio_url) {
       $('#audio').src = settings.audio_url;
       $('#musicName').textContent = settings.audio_name || '배경음악';
@@ -189,14 +212,22 @@ async function loadRoom() {
   }
   await refreshPresence();
   await refreshTotal();
-  if (window.prayerRoomChannel) await supabase.removeChannel(window.prayerRoomChannel);
-  window.prayerRoomChannel = supabase.channel('prayer-room')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'active_prayers' }, refreshPresence)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'room_settings' }, loadRoom)
-    .subscribe();
+  if (!window.prayerRoomChannel) {
+    window.prayerRoomChannel = supabase.channel('prayer-room-data')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'active_prayers' }, refreshPresence)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_settings' }, loadRoom)
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') refreshPresence();
+      });
+  }
   if (!roomPollerStarted) {
     roomPollerStarted = true;
-    setInterval(refreshPresence, 30000);
+    setInterval(() => {
+      if ($('#room').classList.contains('active')) {
+        refreshPresence();
+        startRoomPresence();
+      }
+    }, 5000);
     setInterval(refreshTotal, 30000);
   }
 }
@@ -204,12 +235,69 @@ async function loadRoom() {
 async function refreshPresence() {
   const { data, error } = await supabase.from('active_prayers').select('user_id,display_name,started_at');
   if (error) return;
-  const people = data || [];
+  activePrayerPeople = data || [];
+  prayingUserIds = new Set(activePrayerPeople.map((person) => person.user_id));
+  const state = roomPresenceChannel?.presenceState?.() || {};
+  const visitorById = new Map();
+  Object.values(state).flat().forEach((visitor) => {
+    if (visitor.user_id) visitorById.set(visitor.user_id, visitor.display_name || '기도자');
+  });
+  roomVisitors = [...visitorById.entries()].map(([user_id, display_name]) => ({ user_id, display_name }));
+  renderRoomVisitors();
+}
+
+function renderRoomVisitors() {
+  const people = roomPresenceStatus === 'SUBSCRIBED'
+    ? roomVisitors
+    : activePrayerPeople.map(({ user_id, display_name }) => ({ user_id, display_name }));
   $('#homeCount').textContent = people.length;
   $('#countLabel').textContent = `${people.length}명`;
   $('#people').innerHTML = people.length
-    ? people.map((person) => `<div class="person"><span class="dot"></span>${esc(person.display_name)}<span class="pill">기도 중</span></div>`).join('')
-    : '<div class="empty">아직 기도 중인 사람이 없어요.<br>첫 번째로 기도를 시작해 보세요.</div>';
+    ? people.map((person) => `<div class="person"><span class="dot"></span>${esc(person.display_name)}<span class="pill">${prayingUserIds.has(person.user_id) ? '기도 중' : '함께 있음'}</span></div>`).join('')
+    : '<div class="empty">기도실에 입장하면 이름이 여기에 표시돼요.</div>';
+}
+
+function startRoomPresence() {
+  if (!configured || !user || !$('#room').classList.contains('active')) return;
+  if (!roomPresenceChannel) {
+    const key = globalThis.crypto?.randomUUID?.() || `room-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    roomPresenceChannel = supabase.channel('link-pray-room-visitors', { config: { presence: { key } } })
+      .on('presence', { event: 'sync' }, () => {
+        roomVisitors = Object.values(roomPresenceChannel.presenceState()).flat()
+          .filter((entry) => entry.user_id)
+          .reduce((list, entry) => {
+            if (!list.some((person) => person.user_id === entry.user_id)) list.push(entry);
+            return list;
+          }, [])
+          .map((entry) => ({ user_id: entry.user_id, display_name: entry.display_name || '기도자' }));
+        renderRoomVisitors();
+      })
+      .subscribe(async (status) => {
+        roomPresenceStatus = status;
+        if (status === 'SUBSCRIBED' && user && $('#room').classList.contains('active')) {
+          const { error } = await roomPresenceChannel.track({
+            user_id: user.id,
+            display_name: profile?.name || user.user_metadata?.name || '기도자'
+          });
+          roomPresenceTracked = !error;
+        } else if (status !== 'SUBSCRIBED') {
+          roomPresenceTracked = false;
+        }
+        renderRoomVisitors();
+      });
+  } else if (roomPresenceStatus === 'SUBSCRIBED' && !roomPresenceTracked) {
+    roomPresenceChannel.track({
+      user_id: user.id,
+      display_name: profile?.name || user.user_metadata?.name || '기도자'
+    }).then(({ error }) => { roomPresenceTracked = !error; });
+  }
+}
+
+function stopRoomPresence() {
+  if (roomPresenceChannel && roomPresenceStatus === 'SUBSCRIBED' && roomPresenceTracked) {
+    roomPresenceChannel.untrack();
+  }
+  roomPresenceTracked = false;
 }
 
 async function refreshTotal() {
@@ -311,9 +399,8 @@ async function beginPrayer() {
   startTicker();
   try {
     await $('#audio').play();
-    $('#musicHint').textContent = '기도 중 배경음악 재생';
   } catch {
-    $('#musicHint').textContent = '브라우저가 자동재생을 막았어요. 음악 재생 버튼을 눌러주세요.';
+    toast('브라우저가 자동재생을 막았어요. 음악 플레이어의 재생 버튼을 눌러주세요.');
   }
   await refreshPresence();
   toast('기도시간 기록을 시작했어요.');
@@ -333,7 +420,6 @@ async function stopPrayer() {
   $('#audio').pause();
   $('#timer').textContent = '00:00:00';
   $('#timerHint').textContent = '로그인 후 기도를 시작할 수 있어요';
-  $('#musicHint').textContent = '재생 버튼을 눌러 음악을 들어보세요';
   $('#startBtn').classList.remove('hidden');
   $('#stopBtn').classList.add('hidden');
   await refreshPresence();
@@ -462,7 +548,8 @@ async function saveAdminTopic() {
   if (!content) return toast('공통 기도제목을 입력해 주세요.');
   const { error: historyError } = await supabase.from('room_prayer_topics').insert({ content, created_by: user.id });
   if (historyError) return toast(historyError.message);
-  const { error } = await supabase.from('room_settings').upsert({ id: 1, prayer_topic: content, updated_at: new Date().toISOString() });
+  const now = new Date().toISOString();
+  const { error } = await supabase.from('room_settings').update({ prayer_topic: content, prayer_updated_at: now, updated_at: now }).eq('id', 1);
   if (error) return toast(error.message);
   $('#adminTopic').value = '';
   await loadRoom();
@@ -482,10 +569,10 @@ async function loadAdminData() {
     supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false })
   ]);
   if (historyError) historyEl.innerHTML = `<div class="empty">${esc(historyError.message)}</div>`;
-  else historyEl.innerHTML = history?.length ? history.map((item) => {
-    const date = new Date(item.created_at).toLocaleString('ko-KR');
-    return `<article class="topic"><small>${esc(date)}</small>${esc(item.content)}</article>`;
-  }).join('') : '<div class="empty">아직 게시된 공통 기도제목이 없어요.</div>';
+  else {
+    adminPrayerHistory = history || [];
+    renderAdminPrayerHistory();
+  }
   if (topicsError) { personalEl.innerHTML = `<div class="empty">${esc(topicsError.message)}</div>`; return; }
   if (!topics?.length) { personalEl.innerHTML = '<div class="empty">등록된 개인 기도제목이 없어요.</div>'; return; }
   const ids = [...new Set(topics.map((item) => item.user_id))];
@@ -502,6 +589,71 @@ async function loadAdminData() {
   }).join('');
 }
 
+function renderAdminPrayerHistory() {
+  const historyEl = $('#adminPrayerHistory');
+  if (!historyEl) return;
+  historyEl.innerHTML = adminPrayerHistory.length ? adminPrayerHistory.map((item) => {
+    const date = new Date(item.created_at).toLocaleString('ko-KR');
+    const editing = editingSharedPrayerTopicId === item.id;
+    const content = editing
+      ? `<textarea class="field" id="sharedTopicEdit-${item.id}" maxlength="2000">${esc(item.content)}</textarea><div class="topic-actions"><button class="response-button" onclick="saveSharedPrayerTopic('${item.id}')">저장</button><button class="response-button" onclick="cancelSharedPrayerTopicEdit()">취소</button></div>`
+      : `${esc(item.content)}<div class="topic-actions"><button class="response-button" onclick="editSharedPrayerTopic('${item.id}')">수정</button><button class="response-button" onclick="deleteSharedPrayerTopic('${item.id}')">삭제</button></div>`;
+    return `<article class="topic"><small>${esc(date)}${adminPrayerHistory[0]?.id === item.id ? ' · 현재 기도제목' : ''}</small>${content}</article>`;
+  }).join('') : '<div class="empty">아직 게시된 공통 기도제목이 없어요.</div>';
+}
+
+window.editSharedPrayerTopic = (id) => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  editingSharedPrayerTopicId = id;
+  renderAdminPrayerHistory();
+};
+
+window.cancelSharedPrayerTopicEdit = () => {
+  editingSharedPrayerTopicId = null;
+  renderAdminPrayerHistory();
+};
+
+window.saveSharedPrayerTopic = async (id) => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const item = adminPrayerHistory.find((entry) => entry.id === id);
+  const input = document.getElementById(`sharedTopicEdit-${id}`);
+  const content = input?.value.trim();
+  if (!item || !content) return toast('공통 기도제목을 입력해 주세요.');
+  const { error } = await supabase.from('room_prayer_topics').update({ content }).eq('id', id);
+  if (error) return toast(error.message);
+  if (adminPrayerHistory[0]?.id === id && currentPrayerTopic === item.content) {
+    const now = new Date().toISOString();
+    const { error: currentError } = await supabase.from('room_settings').update({ prayer_topic: content, prayer_updated_at: now, updated_at: now }).eq('id', 1);
+    if (currentError) return toast(currentError.message);
+    currentPrayerTopic = content;
+    await loadRoom();
+  }
+  editingSharedPrayerTopicId = null;
+  await loadAdminData();
+  toast('공통 기도제목을 수정했어요.');
+};
+
+window.deleteSharedPrayerTopic = async (id) => {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const item = adminPrayerHistory.find((entry) => entry.id === id);
+  if (!item || !window.confirm('이 공통 기도제목 기록을 삭제할까요?')) return;
+  const isCurrent = adminPrayerHistory[0]?.id === id && currentPrayerTopic === item.content;
+  const { error } = await supabase.from('room_prayer_topics').delete().eq('id', id);
+  if (error) return toast(error.message);
+  if (isCurrent) {
+    const fallbackItem = adminPrayerHistory.find((entry) => entry.id !== id);
+    const fallback = fallbackItem?.content || '';
+    const fallbackDate = fallbackItem?.created_at || new Date().toISOString();
+    const { error: currentError } = await supabase.from('room_settings').update({ prayer_topic: fallback, prayer_updated_at: fallbackDate, updated_at: new Date().toISOString() }).eq('id', 1);
+    if (currentError) return toast(currentError.message);
+    currentPrayerTopic = fallback;
+    await loadRoom();
+  }
+  if (editingSharedPrayerTopicId === id) editingSharedPrayerTopicId = null;
+  await loadAdminData();
+  toast('공통 기도제목을 삭제했어요.');
+};
+
 async function uploadAudio(event) {
   if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
   const file = event.target.files[0];
@@ -512,7 +664,7 @@ async function uploadAudio(event) {
   const { error } = await supabase.storage.from('room-audio').upload(path, file, { upsert: true, contentType: file.type });
   if (error) { $('#uploadStatus').textContent = error.message; return toast(error.message); }
   const { data: { publicUrl } } = supabase.storage.from('room-audio').getPublicUrl(path);
-  const { error: settingsError } = await supabase.from('room_settings').upsert({ id: 1, audio_url: publicUrl, audio_name: file.name, updated_at: new Date().toISOString() });
+  const { error: settingsError } = await supabase.from('room_settings').update({ audio_url: publicUrl, audio_name: file.name }).eq('id', 1);
   if (settingsError) return toast(settingsError.message);
   $('#uploadStatus').textContent = `업로드 완료: ${file.name}`;
   await loadRoom();
@@ -538,6 +690,7 @@ $('#goRoom').addEventListener('click', () => page('room'));
 $('#authButton').addEventListener('click', () => window.openAuth('login'));
 $('#logoutButton').addEventListener('click', async () => {
   if (activeSessionId) await stopPrayer();
+  stopRoomPresence();
   await supabase.auth.signOut();
   user = null; profile = null; await init(); page('home'); toast('로그아웃했어요.');
 });
@@ -560,6 +713,18 @@ $('#audioFile').addEventListener('change', uploadAudio);
 $$('input[type="tel"]').forEach((input) => input.addEventListener('input', () => { input.value = phoneFormat(input.value); }));
 $('#loginForm [name="identifier"]').addEventListener('input', (event) => {
   if (!event.target.value.includes('@')) event.target.value = phoneFormat(event.target.value);
+});
+window.addEventListener('focus', () => {
+  if ($('#room').classList.contains('active')) {
+    refreshPresence();
+    startRoomPresence();
+  }
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && $('#room').classList.contains('active')) {
+    refreshPresence();
+    startRoomPresence();
+  }
 });
 supabase?.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') setTimeout(init, 0);
