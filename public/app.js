@@ -578,6 +578,37 @@ async function login(event) {
   }
 }
 
+
+async function requestPasswordReset() {
+  const email = $('#resetEmail').value.trim().toLowerCase();
+  if (!email || !$('#resetEmail').checkValidity()) return toast('가입할 때 사용한 이메일 주소를 입력해 주세요.');
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+  if (error) return toast(error.message);
+  toast('비밀번호 재설정 링크를 이메일로 보냈어요.');
+}
+
+async function changePassword() {
+  const password = $('#newPassword').value;
+  if (password.length < 8) return toast('새 비밀번호를 8자 이상 입력해 주세요.');
+  if (password !== $('#confirmNewPassword').value) return toast('새 비밀번호가 서로 다릅니다.');
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return toast(error.message);
+  $('#newPassword').value = ''; $('#confirmNewPassword').value = '';
+  toast('비밀번호를 변경했어요.');
+}
+
+async function saveRecoveredPassword(event) {
+  event.preventDefault();
+  const password = $('#recoveryPassword').value;
+  if (password.length < 8) return toast('새 비밀번호를 8자 이상 입력해 주세요.');
+  if (password !== $('#recoveryPasswordConfirm').value) return toast('새 비밀번호가 서로 다릅니다.');
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return toast(error.message);
+  $('#passwordRecoveryModal').classList.remove('open');
+  $('#recoveryPassword').value = ''; $('#recoveryPasswordConfirm').value = '';
+  toast('비밀번호를 변경했어요. 이제 새 비밀번호로 로그인해 주세요.');
+}
+
 async function reauthenticate(event) {
   event.preventDefault();
   const password = $('#reauthPassword').value;
@@ -898,6 +929,10 @@ $('#loginForm').addEventListener('submit', login);
 $('#reauthForm').addEventListener('submit', reauthenticate);
 $('#closeReauth').addEventListener('click', () => $('#reauthModal').classList.remove('open'));
 $('#profileForm').addEventListener('submit', saveProfile);
+$('#showPasswordReset').addEventListener('click', () => $('#passwordResetBox').classList.toggle('hidden'));
+$('#sendPasswordReset').addEventListener('click', requestPasswordReset);
+$('#changePasswordBtn').addEventListener('click', changePassword);
+$('#passwordRecoveryForm').addEventListener('submit', saveRecoveredPassword);
 $('#requestEmailChange').addEventListener('click', requestEmailChange);
 $('#confirmEmailChange').addEventListener('click', confirmEmailChange);
 $('#saveTopic').addEventListener('click', saveTopic);
@@ -961,6 +996,7 @@ try {
     supabase = createClient(config.url, config.anonKey);
     configured = true;
     supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') $('#passwordRecoveryModal').classList.add('open');
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') setTimeout(init, 0);
     });
   }
