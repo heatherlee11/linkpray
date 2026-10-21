@@ -9,7 +9,8 @@
 - netlify/functions/ : Supabase 설정 반환 및 연락처 로그인 함수
 - supabase-setup.sql : 최초 DB 설정
 - supabase-update-prayer-responses.sql : 기존 DB에 기도응답 열 추가
-- supabase-admin-prayer-update.sql : 기존 DB 관리자 RLS 수정, 공통 기도제목 기록/수정/삭제, 관리자 개인 기도제목 보기, 전체/개인 기도시간 초기화, YouTube 링크 열 추가
+- supabase-admin-prayer-update.sql : 관리자 RLS 수정, 공통 기도제목과 관리자 기능 관련 기존 DB 업데이트
+- supabase-shared-prayer-topics-update.sql : 공통 기도제목 이름/내용 구분, 여러 건 게시, 기도실 공개 표시를 위한 기존 DB 업데이트
 
 기존 GitHub 저장소에 업데이트할 때
 압축을 풀고 ZIP 안의 모든 파일/폴더를 저장소 루트에 복사해 덮어쓴 뒤 commit/push 합니다. Netlify가 자동으로 새 배포를 시작합니다. Build command는 비워두고 netlify.toml이 적용되게 둡니다.
@@ -21,7 +22,10 @@ Supabase 최초 설정
 4. Authentication > Sign In / Providers > Email에서 Email 가입과 이메일 확인을 켭니다.
 
 기존 프로젝트에서 기도응답 기능만 적용
-SQL Editor에서 supabase-update-prayer-responses.sql을 한 번 실행합니다. 최초 설치가 아니라면 supabase-setup.sql을 다시 실행하지 마세요.
+SQL Editor에서 supabase-update-prayer-responses.sql을 한 번 실행합니다.
+
+기존 프로젝트에서 공통 기도제목 이름/내용 및 여러 건 게시 기능 적용
+SQL Editor에서 supabase-shared-prayer-topics-update.sql을 한 번 실행합니다. 이 스크립트는 현재 기도제목을 기록으로 옮긴 뒤 기존 단일 기도제목 값을 비웁니다. 최초 설치가 아니라면 supabase-setup.sql을 다시 실행하지 마세요.
 
 기존 프로젝트에서 관리자 기능 업데이트
 1. SQL Editor에서 최신 supabase-admin-prayer-update.sql 전체를 실행합니다. 이전 버전의 업데이트 SQL을 실행했더라도 다시 실행해 수정/삭제 권한과 기도시간 초기화/YouTube 링크 기능을 반영하세요. 기존 관리자 RLS 오류를 수정하고 기존 공통 기도제목 기록도 보존합니다.

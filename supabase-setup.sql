@@ -4,7 +4,7 @@ create table if not exists public.prayer_sessions (id uuid primary key default g
 create table if not exists public.active_prayers (user_id uuid primary key references auth.users(id) on delete cascade,display_name text not null,session_id uuid not null references public.prayer_sessions(id) on delete cascade,started_at timestamptz not null default now());
 create table if not exists public.personal_prayer_topics (id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,content text not null check(length(content)<=2000),created_at timestamptz not null default now(),response_content text,responded_at timestamptz);
 create table if not exists public.room_settings (id integer primary key check(id=1),prayer_topic text not null default '',prayer_updated_at timestamptz not null default now(),audio_url text,audio_name text,youtube_url text,updated_at timestamptz not null default now());
-create table if not exists public.room_prayer_topics (id uuid primary key default gen_random_uuid(),content text not null check(length(content)<=2000),created_by uuid references public.profiles(id) on delete set null,created_at timestamptz not null default now());
+create table if not exists public.room_prayer_topics (id uuid primary key default gen_random_uuid(),title text not null default '' check(length(title)<=120),content text not null check(length(content)<=2000),created_by uuid references public.profiles(id) on delete set null,created_at timestamptz not null default now());
 insert into public.room_settings(id) values(1) on conflict do nothing;
 create or replace function public.is_pray_admin() returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='admin'); $$;
 grant execute on function public.is_pray_admin() to authenticated;
@@ -31,7 +31,8 @@ create policy "topics own update" on public.personal_prayer_topics for update to
 create policy "topics own delete" on public.personal_prayer_topics for delete to authenticated using(user_id=auth.uid());
 create policy "room settings public read" on public.room_settings for select to anon,authenticated using(true);
 create policy "room settings admin write" on public.room_settings for all to authenticated using(public.is_pray_admin()) with check(public.is_pray_admin());
-create policy "room prayer topics admin read" on public.room_prayer_topics for select to authenticated using(public.is_pray_admin());
+grant select on public.room_prayer_topics to anon,authenticated;
+create policy "room prayer topics public read" on public.room_prayer_topics for select to anon,authenticated using(true);
 create policy "room prayer topics admin insert" on public.room_prayer_topics for insert to authenticated with check(public.is_pray_admin() and created_by=auth.uid());
 create policy "room prayer topics admin update" on public.room_prayer_topics for update to authenticated using(public.is_pray_admin()) with check(public.is_pray_admin());
 create policy "room prayer topics admin delete" on public.room_prayer_topics for delete to authenticated using(public.is_pray_admin());

@@ -60,7 +60,6 @@ let prayerTicker = null;
 let adminLoginPending = false;
 let initialized = false;
 let roomPollerStarted = false;
-let currentPrayerTopic = '';
 let adminPrayerHistory = [];
 let editingSharedPrayerTopicId = null;
 let roomPresenceChannel = null;
@@ -229,18 +228,15 @@ async function restoreActivePrayer() {
 
 async function loadRoom() {
   if (!configured) return;
-  const { data: settings } = await supabase.from('room_settings').select('*').eq('id', 1).maybeSingle();
+  const [{ data: settings }, { data: sharedTopics }] = await Promise.all([
+    supabase.from('room_settings').select('*').eq('id', 1).maybeSingle(),
+    supabase.from('room_prayer_topics').select('id,title,content,created_at').order('created_at', { ascending: false })
+  ]);
   if (settings) {
     $('#youtubeUrl').value = settings.youtube_url || '';
-    currentPrayerTopic = settings.prayer_topic || '';
-    $('#roomTopic').textContent = settings.prayer_topic || '주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.';
-    if (settings.prayer_topic) {
-      const posted = new Date(settings.prayer_updated_at || settings.updated_at || Date.now());
-      const postedDate = `${posted.getFullYear()}년 ${String(posted.getMonth() + 1).padStart(2, '0')}월 ${String(posted.getDate()).padStart(2, '0')}일`;
-      $('#topicBy').textContent = `${postedDate} 오늘의 기도제목`;
-    } else {
-      $('#topicBy').textContent = '기도제목을 마음에 담고 잠시 머물러 보세요.';
-    }
+    const roomSharedPrayerTopics = sharedTopics || [];
+    const legacyTopic = settings.prayer_topic ? [{ title: '', content: settings.prayer_topic }] : [];
+    renderRoomPrayerTopics(roomSharedPrayerTopics.length ? roomSharedPrayerTopics : legacyTopic);
     const videoId = settings.youtube_url ? youtubeVideoId(settings.youtube_url) : null;
     if (videoId) {
       const embedUrl = youtubeEmbedUrl(videoId);
@@ -273,6 +269,7 @@ async function loadRoom() {
         await refreshTotal();
         if (user) await loadMine();
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_prayer_topics' }, loadRoom)
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') refreshPresence();
       });
@@ -287,6 +284,14 @@ async function loadRoom() {
     }, 5000);
     setInterval(refreshTotal, 30000);
   }
+}
+
+function renderRoomPrayerTopics(topics) {
+  const roomTopic = $('#roomTopic');
+  if (!roomTopic) return;
+  roomTopic.innerHTML = topics.length
+    ? topics.map((topic) => `<article class="room-topic-entry">${topic.title?.trim() ? `<h3>${esc(topic.title)}</h3>` : ''}<p>${esc(topic.content)}</p></article>`).join('')
+    : '<p>주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.</p>';
 }
 
 async function refreshPresence() {
@@ -607,17 +612,30 @@ async function saveTopic() {
 
 async function saveAdminTopic() {
   if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
-  const content = $('#adminTopic').value.trim();
-  if (!content) return toast('공통 기도제목을 입력해 주세요.');
-  const { error: historyError } = await supabase.from('room_prayer_topics').insert({ content, created_by: user.id });
+  const drafts = $$('#sharedTopicDrafts .shared-topic-entry').map((entry) => ({
+    title: entry.querySelector('[data-topic-title]').value.trim(),
+    content: entry.querySelector('[data-topic-content]').value.trim()
+  }));
+  const incomplete = drafts.some((draft) => (!!draft.title !== !!draft.content));
+  const ready = drafts.filter((draft) => draft.title && draft.content);
+  if (incomplete) return toast('각 기도제목의 이름과 내용을 모두 입력해 주세요.');
+  if (!ready.length) return toast('기도제목 이름과 내용을 입력해 주세요.');
+  const { error: historyError } = await supabase.from('room_prayer_topics').insert(ready.map((draft) => ({ ...draft, created_by: user.id })));
   if (historyError) return toast(historyError.message);
-  const now = new Date().toISOString();
-  const { error } = await supabase.from('room_settings').update({ prayer_topic: content, prayer_updated_at: now, updated_at: now }).eq('id', 1);
-  if (error) return toast(error.message);
-  $('#adminTopic').value = '';
+  $('#sharedTopicDrafts').innerHTML = '';
+  appendSharedTopicDraft();
   await loadRoom();
   await loadAdminData();
-  toast('공통 기도제목을 게시했어요.');
+  toast(`${ready.length}개의 공통 기도제목을 게시했어요.`);
+}
+
+function appendSharedTopicDraft() {
+  const drafts = $('#sharedTopicDrafts');
+  if (!drafts) return;
+  const row = document.createElement('div');
+  row.className = 'shared-topic-entry';
+  row.innerHTML = '<input class="field" data-topic-title maxlength="120" placeholder="기도제목 이름"><textarea class="field" data-topic-content maxlength="2000" placeholder="기도제목 내용"></textarea><button class="response-button remove-shared-draft" type="button">항목 삭제</button>';
+  drafts.append(row);
 }
 
 window.resetAllPrayerTime = async () => {
@@ -655,7 +673,7 @@ async function loadAdminData() {
   historyEl.innerHTML = '<div class="empty">불러오는 중…</div>';
   personalEl.innerHTML = '<div class="empty">불러오는 중…</div>';
   const [{ data: history, error: historyError }, { data: topics, error: topicsError }, { data: members, error: memberError }, { data: sessions, error: sessionsError }, { data: activeRows, error: activeError }] = await Promise.all([
-    supabase.from('room_prayer_topics').select('id,content,created_at,created_by').order('created_at', { ascending: false }),
+    supabase.from('room_prayer_topics').select('id,title,content,created_at,created_by').order('created_at', { ascending: false }),
     supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false }),
     supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').order('name'),
     supabase.from('prayer_sessions').select('user_id,started_at,ended_at,duration_seconds'),
@@ -692,13 +710,28 @@ async function loadAdminData() {
   const { data: personalMembers, error: membersError } = await supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').in('id', ids);
   if (membersError) { personalEl.innerHTML = `<div class="empty">${esc(membersError.message)}</div>`; return; }
   const memberById = new Map((personalMembers || []).map((member) => [member.id, member]));
-  personalEl.innerHTML = topics.map((item) => {
+  const grouped = new Map();
+  topics.forEach((item) => {
     const member = memberById.get(item.user_id) || {};
-    const metadata = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
     const date = new Date(item.created_at).toLocaleString('ko-KR');
     const response = item.response_content
       ? `<div class="answer-box"><strong>${esc(item.responded_at ? new Date(item.responded_at).toLocaleDateString('ko-KR') : '기도응답')}</strong>${esc(item.response_content)}</div>` : '';
-    return `<article class="topic"><small>${esc(member.name || '이름 없는 기도자')} · ${esc(metadata || '회원정보 미입력')} · ${esc(date)}</small>${esc(item.content)}${response}</article>`;
+    const group = member.group_name?.trim() || '그룹 미지정';
+    const darabang = member.darabang?.trim() || '다락방 미지정';
+    if (!grouped.has(group)) grouped.set(group, new Map());
+    const rooms = grouped.get(group);
+    if (!rooms.has(darabang)) rooms.set(darabang, []);
+    rooms.get(darabang).push({ item, member, date, response });
+  });
+  personalEl.innerHTML = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b, 'ko')).map(([group, rooms]) => {
+    const count = [...rooms.values()].reduce((sum, entries) => sum + entries.length, 0);
+    const roomMarkup = [...rooms.entries()].sort(([a], [b]) => a.localeCompare(b, 'ko')).map(([darabang, entries]) =>
+      `<section class="admin-darabang-group"><h5>${esc(darabang)} <span>${entries.length}개</span></h5>${entries.map(({ item, member, date, response }) => {
+        const metadata = [member.cohort && `${member.cohort}기`, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
+        return `<article class="topic"><small>${esc(member.name || '이름 없는 기도자')}${metadata ? ` · ${esc(metadata)}` : ''} · ${esc(date)}</small>${esc(item.content)}${response}</article>`;
+      }).join('')}</section>`
+    ).join('');
+    return `<section class="admin-group"><h4>${esc(group)} <span>${count}개</span></h4>${roomMarkup}</section>`;
   }).join('');
 }
 
@@ -709,9 +742,9 @@ function renderAdminPrayerHistory() {
     const date = new Date(item.created_at).toLocaleString('ko-KR');
     const editing = editingSharedPrayerTopicId === item.id;
     const content = editing
-      ? `<textarea class="field" id="sharedTopicEdit-${item.id}" maxlength="2000">${esc(item.content)}</textarea><div class="topic-actions"><button class="response-button" onclick="saveSharedPrayerTopic('${item.id}')">저장</button><button class="response-button" onclick="cancelSharedPrayerTopicEdit()">취소</button></div>`
-      : `${esc(item.content)}<div class="topic-actions"><button class="response-button" onclick="editSharedPrayerTopic('${item.id}')">수정</button><button class="response-button" onclick="deleteSharedPrayerTopic('${item.id}')">삭제</button></div>`;
-    return `<article class="topic"><small>${esc(date)}${adminPrayerHistory[0]?.id === item.id ? ' · 현재 기도제목' : ''}</small>${content}</article>`;
+      ? `<input class="field" id="sharedTopicTitleEdit-${item.id}" maxlength="120" value="${esc(item.title || '')}" placeholder="기도제목 이름"><textarea class="field" id="sharedTopicEdit-${item.id}" maxlength="2000" placeholder="내용">${esc(item.content)}</textarea><div class="topic-actions"><button class="response-button" onclick="saveSharedPrayerTopic('${item.id}')">저장</button><button class="response-button" onclick="cancelSharedPrayerTopicEdit()">취소</button></div>`
+      : `${item.title ? `<h4 class="shared-topic-title">${esc(item.title)}</h4>` : ''}${esc(item.content)}<div class="topic-actions"><button class="response-button" onclick="editSharedPrayerTopic('${item.id}')">수정</button><button class="response-button" onclick="deleteSharedPrayerTopic('${item.id}')">삭제</button></div>`;
+    return `<article class="topic"><small>${esc(date)}</small>${content}</article>`;
   }).join('') : '<div class="empty">아직 게시된 공통 기도제목이 없어요.</div>';
 }
 
@@ -730,18 +763,13 @@ window.saveSharedPrayerTopic = async (id) => {
   if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
   const item = adminPrayerHistory.find((entry) => entry.id === id);
   const input = document.getElementById(`sharedTopicEdit-${id}`);
+  const titleInput = document.getElementById(`sharedTopicTitleEdit-${id}`);
   const content = input?.value.trim();
   if (!item || !content) return toast('공통 기도제목을 입력해 주세요.');
-  const { error } = await supabase.from('room_prayer_topics').update({ content }).eq('id', id);
+  const { error } = await supabase.from('room_prayer_topics').update({ title: titleInput?.value.trim() || '', content }).eq('id', id);
   if (error) return toast(error.message);
-  if (adminPrayerHistory[0]?.id === id && currentPrayerTopic === item.content) {
-    const now = new Date().toISOString();
-    const { error: currentError } = await supabase.from('room_settings').update({ prayer_topic: content, prayer_updated_at: now, updated_at: now }).eq('id', 1);
-    if (currentError) return toast(currentError.message);
-    currentPrayerTopic = content;
-    await loadRoom();
-  }
   editingSharedPrayerTopicId = null;
+  await loadRoom();
   await loadAdminData();
   toast('공통 기도제목을 수정했어요.');
 };
@@ -750,18 +778,9 @@ window.deleteSharedPrayerTopic = async (id) => {
   if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
   const item = adminPrayerHistory.find((entry) => entry.id === id);
   if (!item || !window.confirm('이 공통 기도제목 기록을 삭제할까요?')) return;
-  const isCurrent = adminPrayerHistory[0]?.id === id && currentPrayerTopic === item.content;
   const { error } = await supabase.from('room_prayer_topics').delete().eq('id', id);
   if (error) return toast(error.message);
-  if (isCurrent) {
-    const fallbackItem = adminPrayerHistory.find((entry) => entry.id !== id);
-    const fallback = fallbackItem?.content || '';
-    const fallbackDate = fallbackItem?.created_at || new Date().toISOString();
-    const { error: currentError } = await supabase.from('room_settings').update({ prayer_topic: fallback, prayer_updated_at: fallbackDate, updated_at: new Date().toISOString() }).eq('id', 1);
-    if (currentError) return toast(currentError.message);
-    currentPrayerTopic = fallback;
-    await loadRoom();
-  }
+  await loadRoom();
   if (editingSharedPrayerTopicId === id) editingSharedPrayerTopicId = null;
   await loadAdminData();
   toast('공통 기도제목을 삭제했어요.');
@@ -839,6 +858,16 @@ $('#saveTopic').addEventListener('click', saveTopic);
 $('#startBtn').addEventListener('click', beginPrayer);
 $('#stopBtn').addEventListener('click', stopPrayer);
 $('#saveAdminTopic').addEventListener('click', saveAdminTopic);
+$('#addSharedTopicDraft').addEventListener('click', appendSharedTopicDraft);
+$('#sharedTopicDrafts').addEventListener('click', (event) => {
+  if (!event.target.closest('.remove-shared-draft')) return;
+  const rows = $$('#sharedTopicDrafts .shared-topic-entry');
+  if (rows.length <= 1) {
+    rows[0]?.querySelectorAll('input,textarea').forEach((input) => { input.value = ''; });
+    return;
+  }
+  event.target.closest('.shared-topic-entry').remove();
+});
 $('#resetAllPrayerTime').addEventListener('click', () => window.resetAllPrayerTime());
 $('#saveYoutubeLink').addEventListener('click', saveYouTubeLink);
 $('#audioFile').addEventListener('change', uploadAudio);
@@ -879,3 +908,4 @@ try {
 }
 if (supabase) await init();
 else console.warn('Supabase config function did not return a URL and anon key.');
+appendSharedTopicDraft();
