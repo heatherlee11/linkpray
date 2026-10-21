@@ -37,17 +37,30 @@ create policy "room settings admin write" on public.room_settings
 create table if not exists public.room_prayer_topics (
   id uuid primary key default gen_random_uuid(),
   title text not null default '' check (length(title) <= 120),
+  status text not null default 'published' check (status in ('published', 'unpublished', 'completed')),
   content text not null check (length(content) <= 2000),
   created_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now()
 );
+alter table public.room_prayer_topics
+  add column if not exists title text not null default '',
+  add column if not exists status text not null default 'published';
+alter table public.room_prayer_topics
+  drop constraint if exists room_prayer_topics_status_check;
+alter table public.room_prayer_topics
+  add constraint room_prayer_topics_status_check check (status in ('published', 'unpublished', 'completed'));
 alter table public.room_prayer_topics enable row level security;
 grant select, insert, update, delete on public.room_prayer_topics to authenticated;
 grant select on public.room_prayer_topics to anon, authenticated;
+grant execute on function public.is_pray_admin() to anon, authenticated;
 drop policy if exists "room prayer topics admin read" on public.room_prayer_topics;
 drop policy if exists "room prayer topics public read" on public.room_prayer_topics;
-create policy "room prayer topics public read" on public.room_prayer_topics
-  for select to anon, authenticated using (true);
+drop policy if exists "room prayer topics signed-in read" on public.room_prayer_topics;
+drop policy if exists room_prayer_topics_select on public.room_prayer_topics;
+create policy room_prayer_topics_select
+  on public.room_prayer_topics
+  for select
+  using (status = 'published' or public.is_pray_admin());
 drop policy if exists "room prayer topics admin insert" on public.room_prayer_topics;
 create policy "room prayer topics admin insert" on public.room_prayer_topics
   for insert to authenticated
