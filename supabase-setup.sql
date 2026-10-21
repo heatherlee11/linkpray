@@ -1,0 +1,38 @@
+create extension if not exists pgcrypto;
+create table if not exists public.profiles (id uuid primary key references auth.users(id) on delete cascade,email text unique not null,phone text unique not null,name text not null,cohort text not null default '',group_name text not null default '',darabang text not null default '',soon text not null default '',role text not null default 'member' check(role in ('member','admin')),created_at timestamptz not null default now());
+create table if not exists public.prayer_sessions (id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,started_at timestamptz not null default now(),ended_at timestamptz,duration_seconds integer not null default 0 check(duration_seconds>=0));
+create table if not exists public.active_prayers (user_id uuid primary key references auth.users(id) on delete cascade,display_name text not null,session_id uuid not null references public.prayer_sessions(id) on delete cascade,started_at timestamptz not null default now());
+create table if not exists public.personal_prayer_topics (id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,content text not null check(length(content)<=2000),created_at timestamptz not null default now());
+create table if not exists public.room_settings (id integer primary key check(id=1),prayer_topic text not null default '',audio_url text,audio_name text,updated_at timestamptz not null default now());
+insert into public.room_settings(id) values(1) on conflict do nothing;
+create or replace function public.new_prayer_profile() returns trigger language plpgsql security definer set search_path=public as $$ begin insert into public.profiles(id,email,phone,name,cohort,group_name,darabang,soon) values(new.id,lower(new.email),regexp_replace(coalesce(new.raw_user_meta_data->>'phone',''),'[^0-9+]','','g'),coalesce(new.raw_user_meta_data->>'name','기도자'),coalesce(new.raw_user_meta_data->>'cohort',''),coalesce(new.raw_user_meta_data->>'group_name',''),coalesce(new.raw_user_meta_data->>'darabang',''),coalesce(new.raw_user_meta_data->>'soon','')) on conflict(id) do update set email=excluded.email,phone=excluded.phone,name=excluded.name,cohort=excluded.cohort,group_name=excluded.group_name,darabang=excluded.darabang,soon=excluded.soon; return new; end; $$;
+drop trigger if exists on_auth_user_created_prayer_profile on auth.users;
+create trigger on_auth_user_created_prayer_profile after insert or update on auth.users for each row execute procedure public.new_prayer_profile();
+alter table public.profiles enable row level security; alter table public.prayer_sessions enable row level security; alter table public.active_prayers enable row level security; alter table public.personal_prayer_topics enable row level security; alter table public.room_settings enable row level security;
+create policy "profile owner read" on public.profiles for select to authenticated using(id=auth.uid());
+create policy "profile owner update" on public.profiles for update to authenticated using(id=auth.uid()) with check(id=auth.uid() and role=coalesce(auth.jwt()->'app_metadata'->>'role','member'));
+create policy "profile admin read" on public.profiles for select to authenticated using((auth.jwt()->'app_metadata'->>'role')='admin');
+create policy "session own select" on public.prayer_sessions for select to authenticated using(user_id=auth.uid());
+create policy "session own insert" on public.prayer_sessions for insert to authenticated with check(user_id=auth.uid());
+create policy "session own update" on public.prayer_sessions for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
+create policy "session own delete" on public.prayer_sessions for delete to authenticated using(user_id=auth.uid());
+create policy "active prayer visible" on public.active_prayers for select to anon,authenticated using(true);
+create policy "active prayer own insert" on public.active_prayers for insert to authenticated with check(user_id=auth.uid());
+create policy "active prayer own update" on public.active_prayers for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
+create policy "active prayer own delete" on public.active_prayers for delete to authenticated using(user_id=auth.uid());
+create policy "topics own select" on public.personal_prayer_topics for select to authenticated using(user_id=auth.uid());
+create policy "topics own insert" on public.personal_prayer_topics for insert to authenticated with check(user_id=auth.uid());
+create policy "topics own update" on public.personal_prayer_topics for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
+create policy "topics own delete" on public.personal_prayer_topics for delete to authenticated using(user_id=auth.uid());
+create policy "room settings public read" on public.room_settings for select to anon,authenticated using(true);
+create policy "room settings admin write" on public.room_settings for all to authenticated using((auth.jwt()->'app_metadata'->>'role')='admin') with check((auth.jwt()->'app_metadata'->>'role')='admin');
+create or replace function public.public_prayer_total_seconds() returns bigint language sql stable security definer set search_path=public as $$ select (coalesce((select sum(duration_seconds) from public.prayer_sessions where ended_at is not null),0) + coalesce((select sum(extract(epoch from (now()-started_at))::bigint) from public.active_prayers),0))::bigint; $$;
+grant execute on function public.public_prayer_total_seconds() to anon,authenticated;
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('room-audio','room-audio',true,41943040,array['audio/mpeg','audio/mp4','audio/aac','audio/ogg','audio/wav','audio/x-wav','audio/webm']) on conflict(id) do update set public=true,file_size_limit=41943040;
+create policy "public can read room audio" on storage.objects for select to anon,authenticated using(bucket_id='room-audio');
+create policy "admins upload room audio" on storage.objects for insert to authenticated with check(bucket_id='room-audio' and (auth.jwt()->'app_metadata'->>'role')='admin');
+create policy "admins update room audio" on storage.objects for update to authenticated using(bucket_id='room-audio' and (auth.jwt()->'app_metadata'->>'role')='admin');
+create policy "admins delete room audio" on storage.objects for delete to authenticated using(bucket_id='room-audio' and (auth.jwt()->'app_metadata'->>'role')='admin');
+alter publication supabase_realtime add table public.active_prayers;
+
+
