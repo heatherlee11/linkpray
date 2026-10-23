@@ -53,3 +53,7 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 .room-topic-fallback{font-size:15px;line-height:1.9;font-weight:400}
 @media(max-width:700px){.room-topic-fallback{font-size:14px}}
 
+
+.prayer-card p.room-topic-fallback{font-size:20px;line-height:1.9;font-weight:400}
+@media(max-width:700px){.prayer-card p.room-topic-fallback{font-size:17px}}
+
