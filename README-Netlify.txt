@@ -5,6 +5,7 @@
 
 파일 구성
 - public/index.html, public/app.js : 공개 사이트 화면과 동작
+- public/theme.css, public/assets/link-logo.png : 화이트·버건디 디자인과 최적화한 로고
 - netlify.toml : public 폴더 공개, Functions 위치 지정
 - netlify/functions/ : Supabase 설정 반환 및 연락처 로그인 함수
 - supabase-setup.sql : 최초 DB 설정
