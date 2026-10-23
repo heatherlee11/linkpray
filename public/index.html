@@ -8,7 +8,7 @@
 .signup-choice-select:focus{outline:2px solid #a6b9a5;outline-offset:1px;border-color:#6f8c78}
 .signup-choice-select option{font-size:15px;padding:8px}
 @media(max-width:700px){.signup-choice-label{font-size:12px}.signup-choice-select{min-height:52px;font-size:16px;padding:14px 44px 14px 14px}}
-</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@900&display=swap" rel="stylesheet"><link rel="stylesheet" href="./theme.css"></head><body>
+</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet"><link rel="stylesheet" href="./theme.css"></head><body>
 <header class="top"><div class="brand"><img class="brand-logo" src="./assets/link-logo.png" width="64" height="40" alt=""><span>2027&nbsp; LINK PRAY ROOM</span></div><nav class="nav"><button class="active" data-page="home">홈</button><button data-page="room">기도실</button><button data-page="mypage">마이페이지</button><button id="authButton" class="login">로그인</button><button id="logoutButton" class="login hidden">로그아웃</button><button id="adminNav" data-page="admin">관리자</button></nav></header>
 <main><section id="home" class="page active"><div class="hero"><div class="hero-inner"><img class="hero-logo" src="./assets/link-logo.png" width="240" height="150" alt="LINK PRAY ROOM 로고"><div class="eyebrow">A SPACE TO PRAY · 24 HOURS</div><h1><span class="hero-english">2027 LINK</span><br>Pray Room</h1><p>너는 기도할 때에 네 골방에 들어가 문을 닫고<br>은밀한 중에 네 아버지께 기도하라.<br>은밀한 중에 보시는 네 아버지께서 갚으시리라.</p><small class="hero-verse">마태복음 6장 6절</small><button class="primary" id="goRoom">기도하러가기 <span class="arrow">→</span></button><div class="stats"><div class="stat"><b id="homeTotal">00:00:00</b><span>TOGETHER IN PRAYER</span></div><div id="homeMyStat" class="stat hidden"><b id="homeMyTotal">00:00:00</b><span>MY PRAYER TIME</span></div><div class="stat"><b id="homeCount">0</b><span>PRAYING NOW</span></div></div></div></div><div class="quote"><blockquote>“아무 것도 염려하지 말고 다만 모든 일에 기도와 간구로,<br>너희 구할 것을 하나님께 아뢰라.<br>그리하면 모든 지각에 뛰어나신 하나님의 평강이<br>그리스도 예수 안에서 너희 마음과 생각을 지키시리라.”</blockquote><small>빌립보서 4장 6–7절</small></div><footer class="footer">2027 LINK PRAY ROOM · 끊이지 않는 기도의 Link</footer></section>
 <section id="room" class="page"><div class="shell"><div class="heading"><div class="eyebrow">THE PRAYER ROOM</div><h2>지금, 함께 기도해요</h2><p>이와 같이 성령도 우리의 연약함을 도우시나니 우리는 마땅히 기도할 바를 알지 못하나<br>오직 성령이 말할 수 없는 탄식으로 우리를 위하여 친히 간구하시느니라<br>- 로마서 8장 26절 -</p></div><div class="room-grid"><div><div class="card prayer-card"><div id="roomTopic" class="room-topic-list"></div></div><div class="card" style="margin-top:18px;text-align:center"><div class="timer"><strong id="timer">00:00:00</strong><small id="timerHint">로그인 후 기도를 시작할 수 있어요</small></div><div class="actions"><button class="primary" id="startBtn">기도 시작</button><button class="secondary hidden" id="stopBtn">기도 마치기</button></div><div class="music"><span style="font-size:18px">♫</span><div><b id="musicName">배경음악</b></div><audio id="audio" controls loop></audio></div><div id="youtubeWrap" class="youtube-wrap hidden"><iframe id="youtubePlayer" title="배경음악 YouTube player" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div></div></div><aside class="card room-side"><h3>기도실에 함께 있는 사람 <span class="pill" id="countLabel">0명</span></h3><div id="people" class="people"><div class="empty">불러오는 중…</div></div><div class="topic" style="margin-top:25px;background:#f8f8f3"><small>함께하는 기도</small>각자의 골방에서 드리는 기도가 링크의 기도로</div></aside></div><section id="completedPrayerArchive" class="card completed-prayer-archive hidden"><h3>이전 기도제목</h3><div id="completedPrayerTopics"></div></section></div></section>
@@ -22,7 +22,7 @@
   const ignored = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "INPUT"]);
   const tokenPattern = /\d+(?=\s+[A-Za-z])|[A-Za-z]+/g;
   function wrapEnglish(node) {
-    if (!node || node.nodeType !== Node.TEXT_NODE || !node.nodeValue || node.parentElement?.closest(".latin-black")) return;
+    if (!node || node.nodeType !== Node.TEXT_NODE || !node.nodeValue || node.parentElement?.closest(".latin-serif")) return;
     const text = node.nodeValue;
     if (!/[A-Za-z]/.test(text)) return;
     const matches = [...text.matchAll(tokenPattern)];
@@ -33,7 +33,7 @@
       const start = match.index;
       if (start > position) fragment.append(document.createTextNode(text.slice(position, start)));
       const span = document.createElement("span");
-      span.className = "latin-black";
+      span.className = "latin-serif";
       span.lang = "en";
       span.textContent = match[0];
       fragment.append(span);
@@ -44,7 +44,7 @@
   }
   function scan(root) {
     if (root.nodeType === Node.TEXT_NODE) return wrapEnglish(root);
-    if (root.nodeType !== Node.ELEMENT_NODE || ignored.has(root.tagName) || root.closest(".latin-black")) return;
+    if (root.nodeType !== Node.ELEMENT_NODE || ignored.has(root.tagName) || root.closest(".latin-serif")) return;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) { return ignored.has(node.parentElement?.tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; }
     });
