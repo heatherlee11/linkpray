@@ -5,9 +5,9 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 .brand-logo{width:64px;height:40px;object-fit:contain;border-radius:4px}
 .nav button,.textbtn{color:#655a5e}.nav button.active{background:var(--rose);color:var(--burgundy)}.nav .login{color:var(--burgundy);border-color:#e5d3d9}.nav .login:hover{background:var(--rose)}
 .hero{min-height:610px;background:radial-gradient(ellipse at 82% 30%,#934456 0,#76283b 36%,#4d1826 100%);color:#fff;padding:68px max(9vw,30px)}.hero:after{content:"";width:420px;height:270px;right:8%;top:23%;font-size:0;border:1px solid #ffffff20;border-radius:50%;transform:rotate(-16deg)}.hero-logo{display:block;width:180px;height:112px;object-fit:contain;background:#fff;border-radius:8px;padding:5px;margin-bottom:29px;box-shadow:0 14px 44px #23091438}
-.hero .eyebrow{color:#f0d8df}.hero h1{font-family:Georgia,serif;font-weight:500;letter-spacing:-.04em}.hero p{color:#f5e9ed}
+.hero .eyebrow{color:#f0d8df}.hero h1{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:500;letter-spacing:-.04em}.hero p{color:#f5e9ed}
 .primary{background:var(--burgundy);color:#fff;border-radius:999px;padding:14px 23px;box-shadow:0 6px 18px #76283b20;transition:transform .18s ease,background .18s ease}.hero .primary{background:#fff;color:var(--wine);box-shadow:0 8px 24px #240d1630}.primary:hover{background:#5e1d30;transform:translateY(-1px)}.hero .primary:hover{background:#f8eef1}.primary:focus-visible,.secondary:focus-visible,.nav button:focus-visible,.textbtn:focus-visible{outline:3px solid #bd7183;outline-offset:3px}
-.stat span{color:#ead4db}.quote{color:#552130;background:linear-gradient(180deg,#fff,#fffafb)}.quote blockquote,.heading h2,.prayer-card h3,.room-side h3,.card h3,.profile-name,.modal-head h2{font-family:Georgia,serif}.quote small{color:#92757d}.heading .eyebrow,.topic small{color:#8a3c50}.heading h2{color:var(--wine)}
+.stat span{color:#ead4db}.quote{color:#552130;background:linear-gradient(180deg,#fff,#fffafb)}.quote blockquote,.heading h2,.prayer-card h3,.room-side h3,.card h3,.profile-name,.modal-head h2{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.quote small{color:#92757d}.heading .eyebrow,.topic small{color:#8a3c50}.heading h2{color:var(--wine)}
 .card{border-color:var(--line);border-radius:14px;box-shadow:0 10px 30px #49162408}.prayer-card{background:linear-gradient(145deg,#76283b,#501b2a);color:#fff}.prayer-card .label{color:#f0d6de}.prayer-card p{color:#ecdde1}.dot{background:#8f3449;box-shadow:0 0 0 4px #f7edf0}.timer strong,.bigtime{color:var(--burgundy)}
 .secondary{background:#fff;color:var(--burgundy);border:1px solid #e7d6db;border-radius:999px}.secondary:hover{background:var(--rose)}.field,.formgrid input,.loginform input{border-color:#e8dcdf;background:#fff;border-radius:8px}.field:focus,.formgrid input:focus,.loginform input:focus{outline:2px solid #c68b99;outline-offset:1px}.topic,.answer-box{border-color:#eee2e5;background:#fffafb}
 .footer{background:var(--wine);color:#f0e2e6}.modal{background:#32121ee0}.modal-card{background:#fff;border:1px solid #f0e5e8;border-radius:16px}.tabs button{background:#f8f1f3;color:#6a5960}.tabs button.active{background:var(--burgundy);color:#fff}.toast{background:var(--wine)}
@@ -25,7 +25,7 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 .latin-serif{font-family:"Noto Serif KR",serif;font-weight:400}
 
 .room-topic-subject,.shared-topic-subject{display:block;margin:0 0 7px;color:var(--burgundy);font-size:11px;font-weight:700;letter-spacing:.08em}
-.room-topic-entry h3,.shared-topic-title{margin:0 0 10px;color:var(--wine);font-family:Georgia,serif;font-size:18px}
+.room-topic-entry h3,.shared-topic-title{margin:0 0 10px;color:var(--wine);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:18px}
 .room-topic-entry p{white-space:pre-wrap}
 .admin-shared-prayer-totals{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}
 .admin-shared-prayer-totals>h3{margin-bottom:14px}
@@ -42,7 +42,7 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 .completed-subject-card{margin:16px 0;padding:18px;border:1px solid #e5d3d9;border-radius:14px;background:linear-gradient(145deg,#fff,#fff8fa)}
 .completed-subject-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:14px;border-bottom:1px solid #eee2e5}
 .completed-subject-heading>div:first-child>small,.completed-subject-total small,.completed-title-total small,.completed-title-card>div:first-child>small{display:block;color:#8a3c50;font-size:10px;letter-spacing:.08em}
-.completed-subject-heading h3{margin:5px 0 0;color:var(--wine);font:600 18px Georgia,serif}
+.completed-subject-heading h3{margin:5px 0 0;color:var(--wine);font:600 18px system-ui,-apple-system,"Segoe UI",sans-serif}
 .completed-subject-total{text-align:right;white-space:nowrap}.completed-subject-total strong{display:block;margin-top:5px;color:var(--burgundy);font-size:16px}
 .completed-title-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px;padding-top:14px}
 .completed-title-card{display:flex;flex-direction:column;justify-content:space-between;gap:14px;padding:14px;border:1px solid #eee4e7;border-radius:10px;background:#fff}
@@ -56,4 +56,11 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 
 .prayer-card p.room-topic-fallback{font-size:20px;line-height:1.9;font-weight:400}
 @media(max-width:700px){.prayer-card p.room-topic-fallback{font-size:17px}}
+
+
+.field,.formgrid input,.loginform input{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+
+/* Keep Korean text and form controls on the same system font; only English labels use Noto Serif KR. */
+body,body *{font-family:system-ui,-apple-system,'Segoe UI',sans-serif!important}
+body .latin-serif{font-family:'Noto Serif KR',serif!important;font-weight:400!important}
 
