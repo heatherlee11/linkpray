@@ -102,6 +102,9 @@ let roomVisitors = [];
 let activePrayerPeople = [];
 let prayingUserIds = new Set();
 let adminMembers = new Map();
+let adminMemberList = [];
+let adminMemberSeconds = new Map();
+let adminMemberSelection = { darabang: null, soon: null };
 
 function toast(message) {
   const element = $('#toast');
@@ -745,6 +748,42 @@ async function saveAdminMemberProfile(button) {
   toast('회원의 그룹·다락방·순 정보를 저장했어요.');
 }
 
+function renderAdminMemberManagement() {
+  const target = $('#adminPrayerTotals');
+  if (!target) return;
+  const rooms = DARABANG_CHOICES;
+  const { darabang, soon } = adminMemberSelection;
+  if (!darabang) {
+    const extraRooms = [...new Set(adminMemberList.map((member) => member.darabang).filter((value) => value && !rooms.includes(value)))];
+    target.innerHTML = `<div class="admin-member-path"><p>먼저 다락방을 선택해 주세요.</p><div class="admin-member-choice-grid">${[...rooms, ...extraRooms].map((room) => {
+      const count = adminMemberList.filter((member) => member.darabang === room).length;
+      return `<button class="admin-member-choice" type="button" data-member-room="${esc(room)}"><strong>${esc(room)}</strong><small>${count}명</small></button>`;
+    }).join('')}</div></div>`;
+    return;
+  }
+  const inRoom = adminMemberList.filter((member) => member.darabang === darabang);
+  const knownSoons = SOON_CHOICES[darabang] || [];
+  const extraSoons = [...new Set(inRoom.map((member) => member.soon).filter((value) => value && !knownSoons.includes(value)))];
+  if (!soon) {
+    target.innerHTML = `<div class="personal-topic-breadcrumb"><button class="textbtn" type="button" data-member-back="rooms">모든 다락방</button><span>${esc(darabang)}</span></div><h4 class="personal-topic-heading">순을 선택해 주세요</h4><div class="admin-member-choice-grid">${[...knownSoons, ...extraSoons].map((item) => {
+      const count = inRoom.filter((member) => member.soon === item).length;
+      return `<button class="admin-member-choice" type="button" data-member-soon="${esc(item)}"><strong>${esc(formatSoonLabel(item) || '순 미지정')}</strong><small>${count}명</small></button>`;
+    }).join('') || '<div class="empty">등록된 순이 없어요.</div>'}</div>`;
+    return;
+  }
+  const selectedMembers = inRoom.filter((member) => member.soon === soon);
+  target.innerHTML = `<div class="personal-topic-breadcrumb"><button class="textbtn" type="button" data-member-back="rooms">모든 다락방</button><button class="textbtn" type="button" data-member-back="soons">${esc(darabang)} 다락방</button><span>${esc(formatSoonLabel(soon) || '순 미지정')}</span></div><h4 class="personal-topic-heading">${esc(formatSoonLabel(soon) || '순 미지정')} 회원 ${selectedMembers.length}명</h4>${selectedMembers.map((member) => {
+    const metadata = [member.email, member.phone ? phoneFormat(member.phone) : '', member.cohort && `${member.cohort}기`].filter(Boolean).join(' · ');
+    const memberSoonOptions = [...(SOON_CHOICES[member.darabang] || []), ...(member.soon && !(SOON_CHOICES[member.darabang] || []).includes(member.soon) ? [member.soon] : [])];
+    return `<div class="admin-person-row admin-member-card" data-admin-member-row="${member.id}"><div class="admin-member-heading"><b>${esc(member.name || '이름 없는 기도자')}</b><small>${esc(metadata || '연락처 정보 없음')}</small><strong>누적 기도시간 ${fmt(adminMemberSeconds.get(member.id) || 0)}</strong></div><div class="admin-member-fields"><label>그룹<select class="field" data-admin-profile-field="group_name">${choiceOptions(GROUP_CHOICES, member.group_name, '그룹 선택')}</select></label><label>다락방<select class="field" data-admin-profile-field="darabang">${choiceOptions(DARABANG_CHOICES, member.darabang, '다락방 선택')}</select></label><label>순<select class="field" data-admin-profile-field="soon">${choiceOptions(memberSoonOptions, member.soon, '순 선택')}</select></label></div><div class="topic-actions"><button class="secondary" type="button" data-save-admin-member="${member.id}">회원정보 저장</button><button class="secondary" type="button" onclick="resetMemberPrayerTime('${member.id}')">누적시간 초기화</button></div></div>`;
+  }).join('') || '<div class="empty">이 순에 등록된 회원이 없어요.</div>'}`;
+}
+
+function setAdminPanel(panel) {
+  $$('[data-admin-panel-button]').forEach((button) => button.classList.toggle('active', button.dataset.adminPanelButton === panel));
+  $$('[data-admin-panel]').forEach((section) => section.classList.toggle('hidden', section.dataset.adminPanel !== panel));
+}
+
 async function loadAdminData() {
   if (profile?.role !== 'admin') return;
   const historyEl = $('#adminPrayerHistory');
@@ -755,7 +794,7 @@ async function loadAdminData() {
   const [{ data: history, error: historyError }, { data: topics, error: topicsError }, { data: members, error: memberError }, { data: sessions, error: sessionsError }, { data: activeRows, error: activeError }, topicTotalsResult] = await Promise.all([
     supabase.from('room_prayer_topics').select('id,title,content,created_at,created_by,status').order('created_at', { ascending: false }),
     supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false }),
-    supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').order('name'),
+    supabase.from('profiles').select('id,name,email,phone,cohort,group_name,darabang,soon').order('name'),
     supabase.from('prayer_sessions').select('user_id,started_at,ended_at,duration_seconds'),
     supabase.from('active_prayers').select('user_id,started_at'),
     supabase.rpc('shared_topic_prayer_totals')
@@ -779,12 +818,11 @@ async function loadAdminData() {
       const seconds = Math.max(0, Math.floor((Date.now() - Date.parse(session.started_at)) / 1000));
       secondsByUser.set(session.user_id, (secondsByUser.get(session.user_id) || 0) + seconds);
     });
+    adminMemberList = members || [];
+    adminMemberSeconds = secondsByUser;
     const { data: globalSeconds, error: globalError } = await supabase.rpc('public_prayer_total_seconds');
-    const memberRows = (members || []).map((member) => {
-      const details = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, formatSoonLabel(member.soon)].filter(Boolean).join(' · ');
-      return `<div class="admin-person-row admin-member-card" data-admin-member-row="${member.id}"><div class="admin-member-heading"><b>${esc(member.name || '이름 없는 기도자')}</b><small>${esc(details || '회원정보 미입력')}</small><strong>기도시간 ${fmt(secondsByUser.get(member.id) || 0)}</strong></div><div class="admin-member-fields"><label>그룹<select class="field" data-admin-profile-field="group_name">${choiceOptions(GROUP_CHOICES, member.group_name, '그룹 선택')}</select></label><label>다락방<select class="field" data-admin-profile-field="darabang">${choiceOptions(DARABANG_CHOICES, member.darabang, '다락방 선택')}</select></label><label>순<select class="field" data-admin-profile-field="soon">${choiceOptions(SOON_CHOICES[member.darabang] || [], member.soon, '순 선택')}</select></label></div><div class="topic-actions"><button class="secondary" type="button" data-save-admin-member="${member.id}">회원정보 저장</button><button class="secondary" type="button" onclick="resetMemberPrayerTime('${member.id}')">개인 초기화</button></div></div>`;
-    }).join('');
-    totalsEl.innerHTML = `${globalError ? '' : `<p class="admin-global-total">전체 누적 <strong>${fmt(Number(globalSeconds || 0))}</strong></p>`}${memberRows || '<div class="empty">등록된 회원이 없어요.</div>'}`;
+    $('#adminGlobalTotal').innerHTML = globalError ? '' : `전체 누적 기도시간 <strong>${fmt(Number(globalSeconds || 0))}</strong>`;
+    renderAdminMemberManagement();
   }
   if (topicsError) { personalEl.innerHTML = `<div class="empty">${esc(topicsError.message)}</div>`; return; }
   if (!topics?.length) { personalEl.innerHTML = '<div class="empty">등록된 개인 기도제목이 없어요.</div>'; return; }
@@ -994,7 +1032,20 @@ $('#adminPrayerTotals').addEventListener('change', (event) => {
 });
 $('#adminPrayerTotals').addEventListener('click', (event) => {
   const button = event.target.closest('[data-save-admin-member]');
-  if (button) saveAdminMemberProfile(button);
+  if (button) return saveAdminMemberProfile(button);
+  const room = event.target.closest('[data-member-room]');
+  const soon = event.target.closest('[data-member-soon]');
+  const back = event.target.closest('[data-member-back]');
+  if (room) adminMemberSelection = { darabang: room.dataset.memberRoom, soon: null };
+  else if (soon) adminMemberSelection = { ...adminMemberSelection, soon: soon.dataset.memberSoon };
+  else if (back?.dataset.memberBack === 'rooms') adminMemberSelection = { darabang: null, soon: null };
+  else if (back?.dataset.memberBack === 'soons') adminMemberSelection = { ...adminMemberSelection, soon: null };
+  else return;
+  renderAdminMemberManagement();
+});
+$('#adminTabs').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-admin-panel-button]');
+  if (button) setAdminPanel(button.dataset.adminPanelButton);
 });
 $('#showPasswordReset').addEventListener('click', () => $('#passwordResetBox').classList.toggle('hidden'));
 $('#sendPasswordReset').addEventListener('click', requestPasswordReset);
