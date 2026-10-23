@@ -98,16 +98,39 @@ security definer
 set search_path = public
 as $$
   select t.id,
-    floor(coalesce(sum(greatest(0, extract(epoch from (
-      least(coalesce(s.ended_at, now()), coalesce(w.completed_at, now()))
-      - greatest(s.started_at, w.published_at)
-    )))), 0))::bigint as total_seconds
+    coalesce((
+      select sum(topic_sessions.seconds)::bigint
+      from (
+        select greatest(0, extract(epoch from (
+          least(s.ended_at, coalesce(w.completed_at, now()))
+          - greatest(s.started_at, w.published_at)
+        ))) as seconds
+        from public.room_prayer_topic_publish_windows w
+        join public.prayer_sessions s
+          on s.ended_at is not null
+         and s.started_at < coalesce(w.completed_at, now())
+         and s.ended_at > w.published_at
+        where w.topic_id = t.id
+
+        union all
+
+        select greatest(0, extract(epoch from (
+          least(now(), coalesce(w.completed_at, now()))
+          - greatest(s.started_at, ap.started_at, w.published_at)
+        ))) as seconds
+        from public.room_prayer_topic_publish_windows w
+        join public.active_prayers ap
+          on ap.started_at < coalesce(w.completed_at, now())
+        join public.prayer_sessions s
+          on s.id = ap.session_id
+         and s.ended_at is null
+         and s.started_at < coalesce(w.completed_at, now())
+         and now() > w.published_at
+        where w.topic_id = t.id
+      ) as topic_sessions
+    ), 0)::bigint as total_seconds
   from public.room_prayer_topics t
-  left join public.room_prayer_topic_publish_windows w on w.topic_id = t.id
-  left join public.prayer_sessions s
-    on s.started_at < coalesce(w.completed_at, now())
-   and coalesce(s.ended_at, now()) > w.published_at
   where t.status in ('published', 'completed')
-  group by t.id;
+  ;
 $$;
 grant execute on function public.shared_topic_prayer_totals() to anon, authenticated;
