@@ -16,3 +16,7 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 
 .hero-verse{display:block;margin-top:-7px;color:#f0d8df;font-size:12px;letter-spacing:.08em}
 
+
+.quote blockquote{font-size:17px;line-height:1.9}
+@media(max-width:700px){.quote blockquote{font-size:15px;line-height:1.85}}
+
