@@ -20,3 +20,6 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 .quote blockquote{font-size:17px;line-height:1.9}
 @media(max-width:700px){.quote blockquote{font-size:15px;line-height:1.85}}
 
+
+.hero h1{font-variant-numeric:lining-nums}.hero-year{font-family:Georgia,serif;font-size:1.08em;font-weight:600;font-variant-numeric:lining-nums;letter-spacing:-.065em}
+
