@@ -316,7 +316,7 @@ function renderRoomPrayerTopics(topics) {
   if (!roomTopic) return;
   roomTopic.innerHTML = topics.length
     ? topics.map((topic) => `<article class="room-topic-entry">${topic.topic?.trim() ? `<small class="room-topic-subject">${esc(topic.topic)}</small>` : ''}${topic.title?.trim() ? `<h3>${esc(topic.title)}</h3>` : ''}<p>${esc(topic.content)}</p>${topic.id ? `<small class="topic-prayer-total">누적 기도시간 ${sharedPrayerTotals.has(topic.id) ? formatPrayerDuration(sharedPrayerTotals.get(topic.id)) : '집계 준비 중'}</small>` : ''}</article>`).join('')
-    : '<p>주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.</p>';
+    : '<p>너희가 기도할 때에 무엇이든지 믿고 구하는 것은 다 받으리라 하시니라<br><small class="room-topic-subject">- 마태복음 21장 22절 -</small></p>';
 }
 
 function renderCompletedPrayerTopics(topics) {
@@ -324,7 +324,15 @@ function renderCompletedPrayerTopics(topics) {
   const target = $('#completedPrayerTopics');
   if (!section || !target) return;
   section.classList.toggle('hidden', !topics.length);
-  target.innerHTML = topics.map((topic) => `<article class="completed-prayer-entry"><div>${topic.topic?.trim() ? `<small class="room-topic-subject">${esc(topic.topic)}</small>` : ''}<h3>${esc(topic.title || '공통 기도제목')}</h3><p>${esc(topic.content)}</p></div><small>누적 기도시간<br><strong>${sharedPrayerTotals.has(topic.id) ? formatPrayerDuration(sharedPrayerTotals.get(topic.id)) : '집계 준비 중'}</strong></small></article>`).join('');
+  const groups = new Map();
+  topics.forEach((topic) => {
+    const subject = topic.topic?.trim() || '주제 미지정';
+    if (!groups.has(subject)) groups.set(subject, { seconds: 0, topics: [] });
+    const seconds = sharedPrayerTotals.get(topic.id) || 0;
+    groups.get(subject).seconds += seconds;
+    groups.get(subject).topics.push({ ...topic, seconds });
+  });
+  target.innerHTML = [...groups.entries()].map(([subject, group]) => `<section class="completed-subject-card"><header class="completed-subject-heading"><div><small>주제</small><h3>${esc(subject)}</h3></div><div class="completed-subject-total"><small>주제 기도시간</small><strong>${formatPrayerDuration(group.seconds)}</strong></div></header><div class="completed-title-grid">${group.topics.map((topic) => `<article class="completed-title-card"><div><small>제목</small><h4>${esc(topic.title || '제목 미지정')}</h4><p>${esc(topic.content)}</p></div><div class="completed-title-total"><small>제목별 기도시간</small><strong>${formatPrayerDuration(topic.seconds)}</strong></div></article>`).join('')}</div></section>`).join('');
 }
 
 async function refreshPresence() {

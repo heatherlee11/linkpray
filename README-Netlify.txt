@@ -70,3 +70,7 @@ SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (비밀키, 코드/GitHub�
 공통 기도제목 주제 입력 업데이트 (기존 Supabase 프로젝트)
 -------------------------------------------------------
 배포 전에 SQL Editor에서 supabase-prayer-topic-subject-update.sql을 한 번 실행해 room_prayer_topics 테이블에 주제 필드를 추가하세요. 이후 주제, 제목, 내용 순서로 작성할 수 있고, 관리자 공통 기도제목 목록 아래에서 주제별 합계와 각 제목별 누적 기도시간을 확인할 수 있습니다.
+
+One-file SQL update for an existing project
+-------------------------------------------
+For an existing Supabase project, you can run supabase-existing-project-all-updates.sql once instead of running each incremental update file separately. Do not run supabase-setup.sql on an existing project. For a brand-new project, follow the Supabase first-install steps above.

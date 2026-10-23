@@ -35,3 +35,17 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 .admin-prayer-subject-heading h4{margin:0;font-size:15px}.admin-prayer-subject-heading strong{white-space:nowrap}
 .admin-prayer-title-total{padding:10px 0;border-bottom:1px solid #f1e9eb;font-size:12px}.admin-prayer-title-total:last-child{border-bottom:0;padding-bottom:0}.admin-prayer-title-total strong{white-space:nowrap;color:var(--burgundy)}
 @media(max-width:520px){.admin-prayer-subject-total{padding:13px}.admin-prayer-title-total{align-items:flex-start;gap:8px}.admin-prayer-title-total span{line-height:1.6}}
+
+.prayer-card .room-topic-entry h3{color:#fff}
+.prayer-card .room-topic-subject{color:#f0d6de}
+
+.completed-subject-card{margin:16px 0;padding:18px;border:1px solid #e5d3d9;border-radius:14px;background:linear-gradient(145deg,#fff,#fff8fa)}
+.completed-subject-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:14px;border-bottom:1px solid #eee2e5}
+.completed-subject-heading>div:first-child>small,.completed-subject-total small,.completed-title-total small,.completed-title-card>div:first-child>small{display:block;color:#8a3c50;font-size:10px;letter-spacing:.08em}
+.completed-subject-heading h3{margin:5px 0 0;color:var(--wine);font:600 18px Georgia,serif}
+.completed-subject-total{text-align:right;white-space:nowrap}.completed-subject-total strong{display:block;margin-top:5px;color:var(--burgundy);font-size:16px}
+.completed-title-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px;padding-top:14px}
+.completed-title-card{display:flex;flex-direction:column;justify-content:space-between;gap:14px;padding:14px;border:1px solid #eee4e7;border-radius:10px;background:#fff}
+.completed-title-card h4{margin:5px 0;color:#392d31;font-size:14px}.completed-title-card p{margin:0;color:#766d70;font-size:12px;line-height:1.7;white-space:pre-wrap}
+.completed-title-total{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:10px;border-top:1px solid #f1e9eb}.completed-title-total strong{color:var(--burgundy);font-size:13px;white-space:nowrap}
+@media(max-width:520px){.completed-subject-card{padding:14px}.completed-subject-heading{align-items:flex-start}.completed-subject-total strong{font-size:14px}.completed-title-grid{grid-template-columns:1fr}}
