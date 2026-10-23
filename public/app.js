@@ -14,6 +14,36 @@ const phoneFormat = (value) => {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 };
 const phoneDigits = (value) => String(value || '').replace(/\D/g, '');
+const GROUP_CHOICES = ['링크'];
+const DARABANG_CHOICES = ['본부', '마태', '마가', '누가', '요한'];
+const SOON_CHOICES = {
+  '본부': ['링본'],
+  '마태': ['다락방장', '오윤 순', '심수정 순', '김이영 순', '김미선 순', '김정운 순', '한영욱 순'],
+  '마가': ['다락방장', '박효진 순', '이예진 순', '석지민 순', '김예선 순', '송민우 순', '정다혜 순'],
+  '누가': ['다락방장', '임종성 순', '김승주 순', '황형경 순', '양예은 순', '이다윤 순', '주혜령 순'],
+  '요한': ['다락방장', '이재훈 순', '정하영 순', '구윤영 순', '방주원 순', '임태이 순', '전동하 순']
+};
+const sharedPrayerTotals = new Map();
+function fillSelect(select, options, placeholder, selected = '') {
+  if (!select) return;
+  select.innerHTML = `<option value="">${esc(placeholder)}</option>${options.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`).join('')}`;
+  select.value = options.includes(selected) ? selected : '';
+}
+function populateProfileChoices(prefix, values = {}) {
+  const group = $(`#${prefix}Group`), room = $(`#${prefix}Darabang`), soon = $(`#${prefix}Soon`);
+  fillSelect(group, GROUP_CHOICES, '그룹 선택', values.group || '');
+  fillSelect(room, values.group ? DARABANG_CHOICES : [], '다락방 선택', values.darabang || '');
+  fillSelect(soon, SOON_CHOICES[values.darabang] || [], '순 선택', values.soon || '');
+}
+function formatPrayerDuration(seconds) {
+  const minutes = Math.floor(Math.max(0, Number(seconds) || 0) / 60);
+  const hours = Math.floor(minutes / 60);
+  return hours ? `${hours}시간 ${minutes % 60}분` : `${minutes}분`;
+}
+function formatSoonLabel(value) {
+  if (!value) return '';
+  return value.endsWith('순') || value === '링본' || value === '다락방장' ? value : `${value}순`;
+}
 function youtubeVideoId(value) {
   try {
     const url = new URL(value);
@@ -127,26 +157,24 @@ function showProfile() {
   $('#profileName').value = profile?.name || '';
   $('#profilePhone').value = phoneFormat(profile?.phone || '');
   $('#profileCohort').value = profile?.cohort || '';
-  $('#profileGroup').value = profile?.group_name || '';
-  $('#profileDarabang').value = profile?.darabang || '';
-  $('#profileSoon').value = profile?.soon || '';
+  populateProfileChoices('profile', { group: profile?.group_name || '', darabang: profile?.darabang || '', soon: profile?.soon || '' });
   $('#profileEmailInput').value = user.email || '';
   updateEmailChangeState();
   $('#myProfileDetails').textContent = [profile?.cohort && `${profile.cohort}기`, profile?.group_name,
-    profile?.darabang, profile?.soon && `${profile.soon}순`].filter(Boolean).join(' · ');
+    profile?.darabang, formatSoonLabel(profile?.soon)].filter(Boolean).join(' · ');
 }
 
 function updateEmailChangeState() {
   if (!user) return;
   const pending = localStorage.getItem('linkpray-pending-email-change')?.trim().toLowerCase();
-  const applied = !!(pending && user.email_confirmed_at && user.email?.toLowerCase() === pending);
-  $('#emailReauthBox').classList.toggle('hidden', !applied);
-  $('#emailChangeStatus').textContent = applied
-    ? '새 이메일 인증이 확인됐어요. 비밀번호를 다시 입력해 변경을 확정해 주세요.'
+  const confirmed = !!(pending && user.email?.toLowerCase() === pending);
+  if (confirmed) localStorage.removeItem('linkpray-pending-email-change');
+  $('#profileEmailInput').value = user.email || '';
+  $('#emailChangeStatus').textContent = confirmed
+    ? '새 이메일 인증이 완료되어 계정 이메일이 변경됐어요.'
     : (pending
-      ? `Supabase 이메일 변경 설정에 따라 새 주소와 기존 주소에서 인증을 완료한 뒤 이 화면으로 돌아오세요. (요청: ${pending})`
-      : '이메일을 변경하려면 새 주소로 인증을 완료해 주세요.');
-  $('#confirmEmailChange').disabled = !applied;
+      ? `인증 대기 중: ${pending}. Supabase에서 기존 이메일 확인도 요구하는 경우, 기존 주소와 새 주소로 온 인증메일을 모두 확인해 주세요.`
+      : '새 이메일 주소로 인증메일을 보내고, 메일의 링크를 열어 변경을 완료해 주세요.');
 }
 
 async function requestEmailChange() {
@@ -160,21 +188,7 @@ async function requestEmailChange() {
   if (error) return toast(error.message);
   localStorage.setItem('linkpray-pending-email-change', email);
   updateEmailChangeState();
-  toast('인증메일을 보냈어요. 메일 안내에 따라 인증을 완료해 주세요.');
-}
-
-async function confirmEmailChange() {
-  const email = localStorage.getItem('linkpray-pending-email-change')?.trim().toLowerCase();
-  const password = $('#emailReauthPassword').value;
-  if (!email || !password) return toast('계정 비밀번호를 입력해 주세요.');
-  if (!user.email_confirmed_at || user.email?.toLowerCase() !== email) return toast('새 이메일 인증이 아직 완료되지 않았어요.');
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return toast('비밀번호를 확인해 주세요.');
-  user = data.user;
-  localStorage.removeItem('linkpray-pending-email-change');
-  $('#emailReauthPassword').value = '';
-  await init();
-  toast('이메일 변경을 확정했어요.');
+  toast('새 이메일로 인증 링크를 보냈어요. 링크를 열어 변경을 완료해 주세요.');
 }
 
 async function init() {
@@ -192,9 +206,7 @@ async function init() {
       signup.elements.phone.value = phoneFormat(profile.phone || '');
       signup.elements.name.value = profile.name || '';
       signup.elements.cohort.value = profile.cohort || '';
-      signup.elements.group_name.value = profile.group_name || '';
-      signup.elements.darabang.value = profile.darabang || '';
-      signup.elements.soon.value = profile.soon || '';
+      populateProfileChoices('signup', { group: profile.group_name || '', darabang: profile.darabang || '', soon: profile.soon || '' });
       $('#emailVerifyStatus').textContent = '이메일 인증이 확인됐어요. 회원가입을 완료해 주세요.';
     }
   }
@@ -231,13 +243,19 @@ async function restoreActivePrayer() {
 
 async function loadRoom() {
   if (!configured) return;
-  const [{ data: settings }, { data: sharedTopics }] = await Promise.all([
+  const [{ data: settings }, { data: sharedTopics }, totalsResult] = await Promise.all([
     supabase.from('room_settings').select('*').eq('id', 1).maybeSingle(),
-    supabase.from('room_prayer_topics').select('id,title,content,created_at,status').eq('status', 'published').order('created_at', { ascending: false })
+    supabase.from('room_prayer_topics').select('id,title,content,created_at,status').in('status', ['published', 'completed']).order('created_at', { ascending: false }),
+    supabase.rpc('shared_topic_prayer_totals')
   ]);
+  sharedPrayerTotals.clear();
+  if (!totalsResult.error) (totalsResult.data || []).forEach((row) => sharedPrayerTotals.set(row.topic_id, Number(row.total_seconds || 0)));
+  else console.warn('Shared prayer time migration is not installed:', totalsResult.error.message);
   if (settings) {
     $('#youtubeUrl').value = settings.youtube_url || '';
-    const roomSharedPrayerTopics = sharedTopics || [];
+    const roomSharedPrayerTopics = (sharedTopics || []).filter((topic) => topic.status === 'published');
+    const completedTopics = (sharedTopics || []).filter((topic) => topic.status === 'completed');
+    renderCompletedPrayerTopics(completedTopics);
     const legacyTopic = settings.prayer_topic ? [{ title: '', content: settings.prayer_topic }] : [];
     renderRoomPrayerTopics(roomSharedPrayerTopics.length ? roomSharedPrayerTopics : legacyTopic);
     const videoId = settings.youtube_url ? youtubeVideoId(settings.youtube_url) : null;
@@ -286,6 +304,7 @@ async function loadRoom() {
       }
     }, 5000);
     setInterval(refreshTotal, 30000);
+    setInterval(() => { if ($('#room').classList.contains('active')) loadRoom(); }, 60000);
   }
 }
 
@@ -293,8 +312,16 @@ function renderRoomPrayerTopics(topics) {
   const roomTopic = $('#roomTopic');
   if (!roomTopic) return;
   roomTopic.innerHTML = topics.length
-    ? topics.map((topic) => `<article class="room-topic-entry">${topic.title?.trim() ? `<h3>${esc(topic.title)}</h3>` : ''}<p>${esc(topic.content)}</p></article>`).join('')
+    ? topics.map((topic) => `<article class="room-topic-entry">${topic.title?.trim() ? `<h3>${esc(topic.title)}</h3>` : ''}<p>${esc(topic.content)}</p>${topic.id ? `<small class="topic-prayer-total">누적 기도시간 ${sharedPrayerTotals.has(topic.id) ? formatPrayerDuration(sharedPrayerTotals.get(topic.id)) : '집계 준비 중'}</small>` : ''}</article>`).join('')
     : '<p>주님, 이 공간을 찾는 모든 이에게 평안과 소망을 주세요.</p>';
+}
+
+function renderCompletedPrayerTopics(topics) {
+  const section = $('#completedPrayerArchive');
+  const target = $('#completedPrayerTopics');
+  if (!section || !target) return;
+  section.classList.toggle('hidden', !topics.length);
+  target.innerHTML = topics.map((topic) => `<article class="completed-prayer-entry"><div><h3>${esc(topic.title || '공통 기도제목')}</h3><p>${esc(topic.content)}</p></div><small>누적 기도시간<br><strong>${sharedPrayerTotals.has(topic.id) ? formatPrayerDuration(sharedPrayerTotals.get(topic.id)) : '집계 준비 중'}</strong></small></article>`).join('');
 }
 
 async function refreshPresence() {
@@ -518,7 +545,7 @@ async function sendVerificationEmail() {
       password: values.password,
       options: { data: {
         name: values.name.trim(), phone: values.phone, cohort: values.cohort.trim(),
-        group_name: values.group_name.trim(), darabang: values.darabang.trim(), soon: values.soon.trim()
+        group_name: values.group_name, darabang: values.darabang, soon: values.soon
       } }
     });
     if (error) throw error;
@@ -625,7 +652,7 @@ async function saveProfile(event) {
   if (phone.length !== 11 || !phone.startsWith('010')) return toast('휴대폰 번호를 확인해 주세요.');
   const changes = {
     name: $('#profileName').value.trim(), phone, cohort: $('#profileCohort').value.trim(),
-    group_name: $('#profileGroup').value.trim(), darabang: $('#profileDarabang').value.trim(), soon: $('#profileSoon').value.trim()
+    group_name: $('#profileGroup').value, darabang: $('#profileDarabang').value, soon: $('#profileSoon').value
   };
   const { error } = await supabase.from('profiles').update(changes).eq('id', user.id);
   if (error) return toast(error.message);
@@ -658,7 +685,9 @@ async function saveAdminTopic() {
   const { error: historyError } = await supabase.from('room_prayer_topics').insert(ready.map((draft) => ({ ...draft, created_by: user.id })));
   if (historyError) return toast(historyError.message);
   $('#sharedTopicDrafts').innerHTML = '';
-  appendSharedTopicDraft();
+  populateProfileChoices('signup');
+populateProfileChoices('profile');
+appendSharedTopicDraft();
   await loadRoom();
   await loadAdminData();
   toast(`${ready.length}개의 공통 기도제목을 게시했어요.`);
@@ -700,6 +729,22 @@ window.resetMemberPrayerTime = async (memberId) => {
   toast(`${memberName}님의 기도시간을 초기화했어요.`);
 };
 
+function choiceOptions(options, selected, placeholder) {
+  return `<option value="">${esc(placeholder)}</option>${options.map((value) => `<option value="${esc(value)}" ${selected === value ? 'selected' : ''}>${esc(value)}</option>`).join('')}`;
+}
+
+async function saveAdminMemberProfile(button) {
+  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
+  const row = button.closest('[data-admin-member-row]');
+  const memberId = button.dataset.saveAdminMember;
+  const data = Object.fromEntries([...row.querySelectorAll('[data-admin-profile-field]')].map((field) => [field.dataset.adminProfileField, field.value]));
+  if (!data.group_name || !data.darabang || !data.soon) return toast('그룹, 다락방, 순을 모두 선택해 주세요.');
+  const { error } = await supabase.from('profiles').update(data).eq('id', memberId);
+  if (error) return toast(error.message);
+  await loadAdminData();
+  toast('회원의 그룹·다락방·순 정보를 저장했어요.');
+}
+
 async function loadAdminData() {
   if (profile?.role !== 'admin') return;
   const historyEl = $('#adminPrayerHistory');
@@ -707,13 +752,15 @@ async function loadAdminData() {
   if (!historyEl || !personalEl) return;
   historyEl.innerHTML = '<div class="empty">불러오는 중…</div>';
   personalEl.innerHTML = '<div class="empty">불러오는 중…</div>';
-  const [{ data: history, error: historyError }, { data: topics, error: topicsError }, { data: members, error: memberError }, { data: sessions, error: sessionsError }, { data: activeRows, error: activeError }] = await Promise.all([
+  const [{ data: history, error: historyError }, { data: topics, error: topicsError }, { data: members, error: memberError }, { data: sessions, error: sessionsError }, { data: activeRows, error: activeError }, topicTotalsResult] = await Promise.all([
     supabase.from('room_prayer_topics').select('id,title,content,created_at,created_by,status').order('created_at', { ascending: false }),
     supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false }),
     supabase.from('profiles').select('id,name,cohort,group_name,darabang,soon').order('name'),
     supabase.from('prayer_sessions').select('user_id,started_at,ended_at,duration_seconds'),
-    supabase.from('active_prayers').select('user_id,started_at')
+    supabase.from('active_prayers').select('user_id,started_at'),
+    supabase.rpc('shared_topic_prayer_totals')
   ]);
+  if (!topicTotalsResult.error) { sharedPrayerTotals.clear(); (topicTotalsResult.data || []).forEach((row) => sharedPrayerTotals.set(row.topic_id, Number(row.total_seconds || 0))); }
   if (historyError) historyEl.innerHTML = `<div class="empty">${esc(historyError.message)}</div>`;
   else {
     adminPrayerHistory = history || [];
@@ -734,8 +781,8 @@ async function loadAdminData() {
     });
     const { data: globalSeconds, error: globalError } = await supabase.rpc('public_prayer_total_seconds');
     const memberRows = (members || []).map((member) => {
-      const details = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
-      return `<div class="admin-person-row"><div><b>${esc(member.name || '이름 없는 기도자')}</b><small>${esc(details || '회원정보 미입력')}</small></div><strong>${fmt(secondsByUser.get(member.id) || 0)}</strong><button class="secondary" type="button" onclick="resetMemberPrayerTime('${member.id}')">개인 초기화</button></div>`;
+      const details = [member.cohort && `${member.cohort}기`, member.group_name, member.darabang, formatSoonLabel(member.soon)].filter(Boolean).join(' · ');
+      return `<div class="admin-person-row admin-member-card" data-admin-member-row="${member.id}"><div class="admin-member-heading"><b>${esc(member.name || '이름 없는 기도자')}</b><small>${esc(details || '회원정보 미입력')}</small><strong>기도시간 ${fmt(secondsByUser.get(member.id) || 0)}</strong></div><div class="admin-member-fields"><label>그룹<select class="field" data-admin-profile-field="group_name">${choiceOptions(GROUP_CHOICES, member.group_name, '그룹 선택')}</select></label><label>다락방<select class="field" data-admin-profile-field="darabang">${choiceOptions(DARABANG_CHOICES, member.darabang, '다락방 선택')}</select></label><label>순<select class="field" data-admin-profile-field="soon">${choiceOptions(SOON_CHOICES[member.darabang] || [], member.soon, '순 선택')}</select></label></div><div class="topic-actions"><button class="secondary" type="button" data-save-admin-member="${member.id}">회원정보 저장</button><button class="secondary" type="button" onclick="resetMemberPrayerTime('${member.id}')">개인 초기화</button></div></div>`;
     }).join('');
     totalsEl.innerHTML = `${globalError ? '' : `<p class="admin-global-total">전체 누적 <strong>${fmt(Number(globalSeconds || 0))}</strong></p>`}${memberRows || '<div class="empty">등록된 회원이 없어요.</div>'}`;
   }
@@ -771,7 +818,7 @@ function renderAdminPersonalTopics() {
   if (selectedGroup && selectedDarabang && selectedSoon) {
     const entries = adminPersonalTopicTree.get(selectedGroup)?.get(selectedDarabang)?.get(selectedSoon) || [];
     const topicMarkup = entries.map(({ item, member, date, response }) => {
-      const metadata = [member.cohort && `${member.cohort}기`, member.soon && `${member.soon}순`].filter(Boolean).join(' · ');
+      const metadata = [member.cohort && `${member.cohort}기`, formatSoonLabel(member.soon)].filter(Boolean).join(' · ');
       return `<article class="topic"><small>${esc(member.name || '이름 없는 기도자')}${metadata ? ` · ${esc(metadata)}` : ''} · ${esc(date)}</small>${esc(item.content)}${response}</article>`;
     }).join('');
     personalEl.innerHTML = `<div class="personal-topic-breadcrumb"><button class="textbtn" data-personal-nav="all">모든 그룹 · 다락방</button><span>${esc(selectedGroup)} / ${esc(selectedDarabang)}</span><button class="secondary" data-personal-nav="darabang">다락방의 순 목록</button></div><h4 class="personal-topic-heading">${esc(selectedSoon.endsWith('순') || selectedSoon.includes('미지정') ? selectedSoon : `${selectedSoon}순`)}</h4>${topicMarkup || '<div class="empty">이 순에 등록된 기도제목이 없어요.</div>'}`;
@@ -780,7 +827,7 @@ function renderAdminPersonalTopics() {
   if (selectedGroup && selectedDarabang) {
     const soonGroups = adminPersonalTopicTree.get(selectedGroup)?.get(selectedDarabang) || new Map();
     const soonMarkup = [...soonGroups.entries()].sort(([a], [b]) => a.localeCompare(b, 'ko')).map(([soon, entries]) => {
-      const label = soon.endsWith('순') || soon.includes('미지정') ? soon : `${soon}순`;
+      const label = soon.includes('미지정') ? soon : formatSoonLabel(soon);
       return `<button class="personal-topic-choice" data-personal-soon="${esc(soon)}"><span>${esc(label)}</span><small>${entries.length}개 기도제목</small></button>`;
     }).join('');
     personalEl.innerHTML = `<div class="personal-topic-breadcrumb"><button class="textbtn" data-personal-nav="all">모든 그룹 · 다락방</button><span>${esc(selectedGroup)} / ${esc(selectedDarabang)}</span></div><h4 class="personal-topic-heading">순 선택</h4><div class="personal-topic-choices">${soonMarkup || '<div class="empty">등록된 순이 없어요.</div>'}</div>`;
@@ -813,7 +860,8 @@ function renderAdminPrayerHistory() {
     const content = editing
       ? `<input class="field" id="sharedTopicTitleEdit-${item.id}" maxlength="120" value="${esc(item.title || '')}" placeholder="기도제목 이름"><textarea class="field" id="sharedTopicEdit-${item.id}" maxlength="2000" placeholder="내용">${esc(item.content)}</textarea><label class="profile-label">게시 상태<select class="field" id="sharedTopicStatusEdit-${item.id}"><option value="published" ${item.status === 'published' ? 'selected' : ''}>게시</option><option value="unpublished" ${item.status === 'unpublished' ? 'selected' : ''}>미게시</option><option value="completed" ${item.status === 'completed' ? 'selected' : ''}>완료</option></select></label><div class="topic-actions"><button class="response-button" onclick="saveSharedPrayerTopic('${item.id}')">저장</button><button class="response-button" onclick="cancelSharedPrayerTopicEdit()">취소</button></div>`
       : `${item.title ? `<h4 class="shared-topic-title">${esc(item.title)}</h4>` : ''}${esc(item.content)}<div class="topic-actions"><button class="response-button" onclick="editSharedPrayerTopic('${item.id}')">수정</button><button class="response-button" onclick="deleteSharedPrayerTopic('${item.id}')">삭제</button></div>`;
-    return `<article class="topic"><small>${esc(date)}</small>${content}</article>`;
+    const prayerTotal = sharedPrayerTotals.has(item.id) ? `<small class="topic-prayer-total">누적 기도시간 ${formatPrayerDuration(sharedPrayerTotals.get(item.id))}</small>` : '';
+    return `<article class="topic"><small>${esc(date)}</small>${content}${prayerTotal}</article>`;
   }).join('') : `<div class="empty">${adminSharedTopicStatus === 'completed' ? '완료된 이전 기도제목이 없어요.' : adminSharedTopicStatus === 'unpublished' ? '미게시 기도제목이 없어요.' : '게시된 공통 기도제목이 없어요.'}</div>`;
 }
 
@@ -929,12 +977,30 @@ $('#loginForm').addEventListener('submit', login);
 $('#reauthForm').addEventListener('submit', reauthenticate);
 $('#closeReauth').addEventListener('click', () => $('#reauthModal').classList.remove('open'));
 $('#profileForm').addEventListener('submit', saveProfile);
+$('#signupGroup').addEventListener('change', (event) => populateProfileChoices('signup', { group: event.target.value }));
+$('#signupDarabang').addEventListener('change', (event) => populateProfileChoices('signup', { group: $('#signupGroup').value, darabang: event.target.value }));
+$('#profileGroup').addEventListener('change', (event) => populateProfileChoices('profile', { group: event.target.value }));
+$('#profileDarabang').addEventListener('change', (event) => populateProfileChoices('profile', { group: $('#profileGroup').value, darabang: event.target.value }));
+$('#adminPrayerTotals').addEventListener('change', (event) => {
+  const select = event.target.closest('[data-admin-profile-field]');
+  if (!select) return;
+  const row = select.closest('[data-admin-member-row]');
+  if (select.dataset.adminProfileField === 'group_name') {
+    row.querySelector('[data-admin-profile-field="darabang"]').innerHTML = choiceOptions(DARABANG_CHOICES, '', '다락방 선택');
+    row.querySelector('[data-admin-profile-field="soon"]').innerHTML = choiceOptions([], '', '순 선택');
+  } else if (select.dataset.adminProfileField === 'darabang') {
+    row.querySelector('[data-admin-profile-field="soon"]').innerHTML = choiceOptions(SOON_CHOICES[select.value] || [], '', '순 선택');
+  }
+});
+$('#adminPrayerTotals').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-save-admin-member]');
+  if (button) saveAdminMemberProfile(button);
+});
 $('#showPasswordReset').addEventListener('click', () => $('#passwordResetBox').classList.toggle('hidden'));
 $('#sendPasswordReset').addEventListener('click', requestPasswordReset);
 $('#changePasswordBtn').addEventListener('click', changePassword);
 $('#passwordRecoveryForm').addEventListener('submit', saveRecoveredPassword);
 $('#requestEmailChange').addEventListener('click', requestEmailChange);
-$('#confirmEmailChange').addEventListener('click', confirmEmailChange);
 $('#saveTopic').addEventListener('click', saveTopic);
 $('#startBtn').addEventListener('click', beginPrayer);
 $('#stopBtn').addEventListener('click', stopPrayer);
@@ -985,7 +1051,7 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 supabase?.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') setTimeout(init, 0);
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') setTimeout(init, 0);
 });
 
 try {
@@ -997,7 +1063,7 @@ try {
     configured = true;
     supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') $('#passwordRecoveryModal').classList.add('open');
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') setTimeout(init, 0);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') setTimeout(init, 0);
     });
   }
 } catch (error) {
@@ -1006,4 +1072,6 @@ try {
 }
 if (supabase) await init();
 else console.warn('Supabase config function did not return a URL and anon key.');
+populateProfileChoices('signup');
+populateProfileChoices('profile');
 appendSharedTopicDraft();
