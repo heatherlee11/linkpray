@@ -316,7 +316,7 @@ function renderRoomPrayerTopics(topics) {
   if (!roomTopic) return;
   roomTopic.innerHTML = topics.length
     ? topics.map((topic) => `<article class="room-topic-entry">${topic.topic?.trim() ? `<small class="room-topic-subject">${esc(topic.topic)}</small>` : ''}${topic.title?.trim() ? `<h3>${esc(topic.title)}</h3>` : ''}<p>${esc(topic.content)}</p>${topic.id ? `<small class="topic-prayer-total">누적 기도시간 ${sharedPrayerTotals.has(topic.id) ? formatPrayerDuration(sharedPrayerTotals.get(topic.id)) : '집계 준비 중'}</small>` : ''}</article>`).join('')
-    : '<p>너희가 기도할 때에 무엇이든지 믿고 구하는 것은 다 받으리라 하시니라<br><small class="room-topic-subject">- 마태복음 21장 22절 -</small></p>';
+    : '<p class="room-topic-fallback">너희가 기도할 때에 무엇이든지 믿고 구하는 것은 다 받으리라 하시니라<br><small class="room-topic-subject">- 마태복음 21장 22절 -</small></p>';
 }
 
 function renderCompletedPrayerTopics(topics) {

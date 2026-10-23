@@ -49,3 +49,7 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 .completed-title-card h4{margin:5px 0;color:#392d31;font-size:14px}.completed-title-card p{margin:0;color:#766d70;font-size:12px;line-height:1.7;white-space:pre-wrap}
 .completed-title-total{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:10px;border-top:1px solid #f1e9eb}.completed-title-total strong{color:var(--burgundy);font-size:13px;white-space:nowrap}
 @media(max-width:520px){.completed-subject-card{padding:14px}.completed-subject-heading{align-items:flex-start}.completed-subject-total strong{font-size:14px}.completed-title-grid{grid-template-columns:1fr}}
+
+.room-topic-fallback{font-size:15px;line-height:1.9;font-weight:400}
+@media(max-width:700px){.room-topic-fallback{font-size:14px}}
+
