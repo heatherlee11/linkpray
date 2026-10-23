@@ -5,13 +5,14 @@
 
 파일 구성
 - public/index.html, public/app.js : 공개 사이트 화면과 동작
+- public/theme.css, public/assets/link-logo.png : 화이트·버건디 디자인과 최적화한 로고
 - netlify.toml : public 폴더 공개, Functions 위치 지정
 - netlify/functions/ : Supabase 설정 반환 및 연락처 로그인 함수
 - supabase-setup.sql : 최초 DB 설정
 - supabase-update-prayer-responses.sql : 기존 DB에 기도응답 열 추가
 - supabase-topic-prayer-time-update.sql : 회원분류 선택, 관리자 회원정보 수정 권한, 공통 기도제목별 게시 기간/누적 기도시간 추가
 - supabase-admin-prayer-update.sql : 관리자 RLS 수정, 공통 기도제목과 관리자 기능 관련 기존 DB 업데이트
-- supabase-shared-prayer-topics-update.sql : 공통 기도제목 제목/내용 및 상태(게시/미게시/완료), 게시 항목만 공개, 여러 건 게시를 위한 기존 DB 업데이트
+- supabase-shared-prayer-topics-update.sql (주제 필드 변경 포함) : 공통 기도제목 주제/제목/내용 및 상태(게시/미게시/완료), 게시 항목만 공개, 여러 건 게시를 위한 기존 DB 업데이트
 
 기존 GitHub 저장소에 업데이트할 때
 압축을 풀고 ZIP 안의 모든 파일/폴더를 저장소 루트에 복사해 덮어쓴 뒤 commit/push 합니다. Netlify가 자동으로 새 배포를 시작합니다. Build command는 비워두고 netlify.toml이 적용되게 둡니다.
@@ -63,5 +64,13 @@ SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (비밀키, 코드/GitHub�
 최근 업데이트 안내
 - 기존 Supabase 프로젝트는 supabase-topic-prayer-time-update.sql을 SQL Editor에서 실행한 뒤 웹 파일을 배포합니다. 이 스크립트는 관리자 프로필 수정 권한, 공통 기도제목 공개 범위, 주제별 게시 기간 기록 및 누적시간 조회를 설정합니다. 기존 완료 주제의 정확한 게시/완료 시각은 데이터베이스에 저장되어 있지 않아 생성 시각부터 마이그레이션 시점까지로 추정합니다. 새 주제는 게시/완료 시각을 정확히 기록합니다.
 - 회원가입의 그룹/다락방/순은 지정된 목록에서 선택하며, 관리자 화면에서 기존 회원의 값을 수정할 수 있습니다.
-- 이메일 변경은 인증 링크 확인 후 Supabase 계정 이메일이 바뀌는 방식입니다. Supabase Authentication 설정에서 이메일 변경 확인을 양쪽 이메일에 요구하면 기존/새 이메일 모두의 링크를 확인해야 합니다. Redirect URLs에 배포 사이트 주소가 등록되어 있어야 합니다.
+- 이메일 변경은 새 이메일 주소에서 인증 링크를 확인하면 완료됩니다. Supabase Dashboard의 Authentication > Sign In / Providers > Email에서 Secure email change를 끄면 새 이메일만 인증하도록 설정할 수 있습니다. Redirect URLs에 배포 사이트 주소가 등록되어 있어야 합니다.
 - 공통 기도제목별 누적시간은 해당 주제가 게시된 구간과 전체 회원의 기도 세션이 겹친 시간을 합산합니다. 기존 완료 주제의 과거 게시/완료 시각은 기록돼 있지 않아 생성 시각부터 이번 SQL 적용 시각까지로 추정하며, 이후 상태변경은 정확히 저장합니다. 동시에 여러 주제가 게시되어 있으면 같은 기도 세션 시간이 각 주제의 게시 기간 합계에 각각 포함될 수 있습니다.
+
+공통 기도제목 주제 입력 업데이트 (기존 Supabase 프로젝트)
+-------------------------------------------------------
+배포 전에 SQL Editor에서 supabase-prayer-topic-subject-update.sql을 한 번 실행해 room_prayer_topics 테이블에 주제 필드를 추가하세요. 이후 주제, 제목, 내용 순서로 작성할 수 있고, 관리자 공통 기도제목 목록 아래에서 주제별 합계와 각 제목별 누적 기도시간을 확인할 수 있습니다.
+
+One-file SQL update for an existing project
+-------------------------------------------
+For an existing Supabase project, you can run supabase-existing-project-all-updates.sql once instead of running each incremental update file separately. Do not run supabase-setup.sql on an existing project. For a brand-new project, follow the Supabase first-install steps above.

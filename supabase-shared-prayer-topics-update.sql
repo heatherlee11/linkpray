@@ -3,6 +3,13 @@
 -- and archives the current legacy room_settings.prayer_topic.
 
 alter table public.room_prayer_topics
+  add column if not exists topic text not null default '';
+alter table public.room_prayer_topics
+  drop constraint if exists room_prayer_topics_topic_length;
+alter table public.room_prayer_topics
+  add constraint room_prayer_topics_topic_length check (length(topic) <= 120);
+
+alter table public.room_prayer_topics
   add column if not exists title text not null default '';
 alter table public.room_prayer_topics
   drop constraint if exists room_prayer_topics_title_length;

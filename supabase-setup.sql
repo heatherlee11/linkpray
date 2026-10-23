@@ -4,7 +4,7 @@ create table if not exists public.prayer_sessions (id uuid primary key default g
 create table if not exists public.active_prayers (user_id uuid primary key references auth.users(id) on delete cascade,display_name text not null,session_id uuid not null references public.prayer_sessions(id) on delete cascade,started_at timestamptz not null default now());
 create table if not exists public.personal_prayer_topics (id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,content text not null check(length(content)<=2000),created_at timestamptz not null default now(),response_content text,responded_at timestamptz);
 create table if not exists public.room_settings (id integer primary key check(id=1),prayer_topic text not null default '',prayer_updated_at timestamptz not null default now(),audio_url text,audio_name text,youtube_url text,updated_at timestamptz not null default now());
-create table if not exists public.room_prayer_topics (id uuid primary key default gen_random_uuid(),title text not null default '' check(length(title)<=120),status text not null default 'published' check(status in ('published','unpublished','completed')),content text not null check(length(content)<=2000),created_by uuid references public.profiles(id) on delete set null,created_at timestamptz not null default now());
+create table if not exists public.room_prayer_topics (id uuid primary key default gen_random_uuid(),topic text not null default '' check(length(topic)<=120),title text not null default '' check(length(title)<=120),status text not null default 'published' check(status in ('published','unpublished','completed')),content text not null check(length(content)<=2000),created_by uuid references public.profiles(id) on delete set null,created_at timestamptz not null default now());
 insert into public.room_settings(id) values(1) on conflict do nothing;
 create or replace function public.is_pray_admin() returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='admin'); $$;
 grant execute on function public.is_pray_admin() to anon,authenticated;
@@ -128,16 +128,35 @@ stable
 security definer
 set search_path = public
 as $$
-  select t.id,
-    floor(coalesce(sum(greatest(0, extract(epoch from (
-      least(coalesce(s.ended_at, now()), coalesce(w.completed_at, now()))
-      - greatest(s.started_at, w.published_at)
-    )))), 0))::bigint as total_seconds
+  with topic_intervals as (
+    select w.topic_id,
+      greatest(0, extract(epoch from (
+        least(s.ended_at, coalesce(w.completed_at, now()))
+        - greatest(s.started_at, w.published_at)
+      ))) as seconds
+    from public.room_prayer_topic_publish_windows w
+    join public.prayer_sessions s
+      on s.ended_at is not null
+     and s.started_at < coalesce(w.completed_at, now())
+     and s.ended_at > w.published_at
+    union all
+    select w.topic_id,
+      greatest(0, extract(epoch from (
+        least(now(), coalesce(w.completed_at, now()))
+        - greatest(s.started_at, ap.started_at, w.published_at)
+      ))) as seconds
+    from public.room_prayer_topic_publish_windows w
+    join public.active_prayers ap
+      on ap.started_at < coalesce(w.completed_at, now())
+    join public.prayer_sessions s
+      on s.id = ap.session_id
+     and s.ended_at is null
+     and s.started_at < coalesce(w.completed_at, now())
+     and now() > w.published_at
+  )
+  select t.id, floor(coalesce(sum(i.seconds), 0))::bigint as total_seconds
   from public.room_prayer_topics t
-  left join public.room_prayer_topic_publish_windows w on w.topic_id = t.id
-  left join public.prayer_sessions s
-    on s.started_at < coalesce(w.completed_at, now())
-   and coalesce(s.ended_at, now()) > w.published_at
+  left join topic_intervals i on i.topic_id = t.id
   where t.status in ('published', 'completed')
   group by t.id;
 $$;
