@@ -64,3 +64,7 @@ body{background:#fff;color:var(--ink);font-family:system-ui,-apple-system,"Segoe
 body,body *{font-family:system-ui,-apple-system,'Segoe UI',sans-serif!important}
 body .latin-serif{font-family:'Noto Serif KR',serif!important;font-weight:400!important}
 
+
+/* Serif accents for the prayer room and admin page titles only. */
+#room .heading h2,#admin .heading h2{font-family:'Noto Serif KR',serif!important;font-weight:500;letter-spacing:-.035em}
+
