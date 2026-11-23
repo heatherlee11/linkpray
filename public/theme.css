@@ -68,3 +68,22 @@ body .latin-serif{font-family:'Noto Serif KR',serif!important;font-weight:400!im
 /* Serif accents for the prayer room and admin page titles only. */
 #room .heading h2,#admin .heading h2{font-family:'Noto Serif KR',serif!important;font-weight:500;letter-spacing:-.035em}
 
+.term-admin-tool{margin-top:12px;padding:16px;background:#f7f8f3;border:1px solid var(--line);border-radius:6px}
+.term-admin-tool>strong{display:block;color:var(--green);font-size:14px}
+.term-admin-tool p{margin:7px 0 10px}
+.term-start-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
+.term-start-controls .field{margin:0;min-height:44px}
+.term-start-controls button{min-height:44px;white-space:nowrap}
+@media(max-width:520px){.term-start-controls{grid-template-columns:1fr}.term-start-controls button{width:100%}}
+.term-admin-tool{margin-top:12px;padding:16px;background:#f7f8f3;border:1px solid var(--line);border-radius:6px}
+.term-admin-tool>strong{display:block;color:var(--green);font-size:14px}
+.term-admin-tool p{margin:7px 0 10px}
+.term-start-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
+.term-start-controls .field{margin:0;min-height:44px}
+.term-start-controls button{min-height:44px;white-space:nowrap}
+.term-history-list{margin-top:12px;color:var(--muted);font-size:12px}
+.term-history-list>strong{display:block;margin-bottom:5px;color:var(--green)}
+.term-history-list>div{display:flex;justify-content:space-between;gap:14px;padding:5px 0;border-bottom:1px solid var(--line)}
+.term-history-list b{color:var(--green);font-variant-numeric:tabular-nums}
+.term-member-history{grid-column:1/-1;color:var(--muted);font-size:11px;line-height:1.7}
+@media(max-width:520px){.term-start-controls{grid-template-columns:1fr}.term-start-controls button{width:100%}}

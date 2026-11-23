@@ -15,9 +15,11 @@ const phoneFormat = (value) => {
 };
 const phoneDigits = (value) => String(value || '').replace(/\D/g, '');
 const GROUP_CHOICES = ['링크'];
-const DARABANG_CHOICES = ['본부', '마태', '마가', '누가', '요한'];
+const DARABANG_CHOICES = ['본부', '멘토', '교역자', '마태', '마가', '누가', '요한'];
 const SOON_CHOICES = {
   '본부': ['링본'],
+  '멘토': ['멘토'],
+  '교역자': ['교역자'],
   '마태': ['다락방장', '오윤 순', '심수정 순', '김이영 순', '김미선 순', '김정운 순', '한영욱 순'],
   '마가': ['다락방장', '박효진 순', '이예진 순', '석지민 순', '김예선 순', '송민우 순', '정다혜 순'],
   '누가': ['다락방장', '임종성 순', '김승주 순', '황형경 순', '양예은 순', '이다윤 순', '주혜령 순'],
@@ -42,7 +44,7 @@ function formatPrayerDuration(seconds) {
 }
 function formatSoonLabel(value) {
   if (!value) return '';
-  return value.endsWith('순') || value === '링본' || value === '다락방장' ? value : `${value}순`;
+  return value.endsWith('순') || value === '링본' || value === '다락방장' || value === '멘토' || value === '교역자' ? value : `${value}순`;
 }
 function youtubeVideoId(value) {
   try {
@@ -83,6 +85,7 @@ let supabase = null;
 let configured = false;
 let user = null;
 let profile = null;
+let currentPrayerTerm = '27텀';
 let activeSessionId = null;
 let activeStartedAt = 0;
 let completedPrayerSeconds = 0;
@@ -104,6 +107,7 @@ let prayingUserIds = new Set();
 let adminMembers = new Map();
 let adminMemberList = [];
 let adminMemberSeconds = new Map();
+let adminMemberTermSeconds = new Map();
 let adminMemberSelection = { darabang: null, soon: null };
 
 function toast(message) {
@@ -255,6 +259,11 @@ async function loadRoom() {
   if (!totalsResult.error) (totalsResult.data || []).forEach((row) => sharedPrayerTotals.set(row.topic_id, Number(row.total_seconds || 0)));
   else console.warn('Shared prayer time migration is not installed:', totalsResult.error.message);
   if (settings) {
+    currentPrayerTerm = String(settings.current_term || '27텀');
+    if ($('#homeTotalCaption')) $('#homeTotalCaption').textContent = `${currentPrayerTerm} 전체 기도시간`;
+    if ($('#homeMyTotalCaption')) $('#homeMyTotalCaption').textContent = `나의 ${currentPrayerTerm} 기도시간`;
+    if ($('#myTermCaption')) $('#myTermCaption').textContent = `${currentPrayerTerm} 나의 누적 기도시간`;
+    if ($('#currentTermLabel')) $('#currentTermLabel').textContent = `현재 기도 텀: ${currentPrayerTerm}`;
     $('#youtubeUrl').value = settings.youtube_url || '';
     const roomSharedPrayerTopics = (sharedTopics || []).filter((topic) => topic.status === 'published');
     const completedTopics = (sharedTopics || []).filter((topic) => topic.status === 'completed');
@@ -292,6 +301,7 @@ async function loadRoom() {
         await loadRoom();
         await refreshTotal();
         if (user) await loadMine();
+        if (profile?.role === 'admin' && $('#admin').classList.contains('active')) await loadAdminData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'room_prayer_topics' }, loadRoom)
       .subscribe((status) => {
@@ -419,10 +429,15 @@ async function refreshTotal() {
 
 async function loadMine() {
   if (!user || !configured) return;
-  const { data: sessions, error } = await supabase.from('prayer_sessions')
-    .select('id,started_at,ended_at,duration_seconds').eq('user_id', user.id).order('started_at', { ascending: false });
+  const { data: termTotals, error } = await supabase.rpc('member_prayer_term_totals');
   if (error) return;
-  completedPrayerSeconds = (sessions || []).reduce((sum, session) => sum + Number(session.duration_seconds || 0), 0);
+  const sessionsByTerm = new Map((termTotals || []).map((row) => [row.term_name, Number(row.total_seconds || 0)]));
+  completedPrayerSeconds = sessionsByTerm.get(currentPrayerTerm) || 0;
+  const previousTerms = [...sessionsByTerm.entries()].filter(([term, seconds]) => term !== currentPrayerTerm && seconds > 0);
+  const historyEl = $('#myPrayerTermHistory');
+  if (historyEl) historyEl.innerHTML = previousTerms.length
+    ? `<strong>이전 텀 기록</strong>${previousTerms.map(([term, seconds]) => `<div><span>${esc(term)}</span><b>${fmt(seconds)}</b></div>`).join('')}`
+    : '';
   const liveSeconds = activeSessionId ? Math.floor((Date.now() - activeStartedAt) / 1000) : 0;
   $('#myTotal').textContent = fmt(completedPrayerSeconds + liveSeconds);
   $('#homeMyTotal').textContent = fmt(completedPrayerSeconds + liveSeconds);
@@ -488,11 +503,14 @@ function startTicker() {
 async function beginPrayer() {
   if (!user) return window.openAuth('login');
   if (activeSessionId) return;
+  const { data: settings, error: settingsError } = await supabase.from('room_settings').select('current_term').eq('id', 1).maybeSingle();
+  if (settingsError) return toast(settingsError.message);
+  currentPrayerTerm = String(settings?.current_term || currentPrayerTerm || '27텀');
   const clickedAt = Date.now();
   startPrayerMusic();
   const startedAt = new Date(clickedAt).toISOString();
   const { data: session, error } = await supabase.from('prayer_sessions')
-    .insert({ user_id: user.id, started_at: startedAt }).select('id,started_at').single();
+    .insert({ user_id: user.id, started_at: startedAt, term_name: currentPrayerTerm }).select('id,started_at').single();
   if (error) { pausePrayerMusic(); return toast(error.message); }
   const { error: presenceError } = await supabase.from('active_prayers').upsert({
     user_id: user.id, display_name: profile?.name || user.user_metadata?.name || '기도자',
@@ -722,32 +740,21 @@ function appendSharedTopicDraft() {
   drafts.append(row);
 }
 
-window.resetAllPrayerTime = async () => {
+async function startNewPrayerTerm() {
   if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
-  if (!window.confirm('모든 회원의 완료된 기도 기록을 삭제해 전체 누적을 초기화할까요? 진행 중인 기도는 이 시각부터 다시 계산됩니다.')) return;
-  const { error } = await supabase.rpc('admin_reset_prayer_time', { target_user_id: null });
+  const termName = $('#nextPrayerTerm').value.trim();
+  if (!termName || termName.length > 40) return toast('새 텀 이름을 1~40자로 입력해 주세요.');
+  if (termName === currentPrayerTerm) return toast('현재 텀과 다른 이름을 입력해 주세요.');
+  if (!window.confirm(`${termName}을(를) 새 기도 텀으로 시작할까요? 이전 텀의 전체·개인 기도 기록은 보존됩니다. 진행 중인 기도가 없어야 전환할 수 있어요.`)) return;
+  const { error } = await supabase.rpc('admin_start_prayer_term', { p_term_name: termName });
   if (error) return toast(error.message);
+  $('#nextPrayerTerm').value = '';
+  await loadRoom();
   await refreshTotal();
-  await refreshPresence();
-  await loadAdminData();
   if (user) await loadMine();
-  toast('전체 기도시간을 초기화했어요.');
-};
-
-window.resetMemberPrayerTime = async (memberId) => {
-  if (profile?.role !== 'admin') return toast('관리자 계정으로 로그인해 주세요.');
-  const member = adminMembers.get(memberId);
-  if (!member) return toast('회원을 찾을 수 없어요.');
-  const memberName = member.name || '이 회원';
-  if (!window.confirm(`${memberName}님의 완료된 기도 기록을 삭제해 누적을 초기화할까요? 진행 중인 기도는 이 시각부터 다시 계산됩니다.`)) return;
-  const { error } = await supabase.rpc('admin_reset_prayer_time', { target_user_id: memberId });
-  if (error) return toast(error.message);
-  await refreshTotal();
-  await refreshPresence();
   await loadAdminData();
-  if (memberId === user.id) await loadMine();
-  toast(`${memberName}님의 기도시간을 초기화했어요.`);
-};
+  toast(`${termName} 기도시간 집계를 시작했어요.`);
+}
 
 function choiceOptions(options, selected, placeholder) {
   return `<option value="">${esc(placeholder)}</option>${options.map((value) => `<option value="${esc(value)}" ${selected === value ? 'selected' : ''}>${esc(value)}</option>`).join('')}`;
@@ -792,7 +799,11 @@ function renderAdminMemberManagement() {
   target.innerHTML = `<div class="personal-topic-breadcrumb"><button class="textbtn" type="button" data-member-back="rooms">모든 다락방</button><button class="textbtn" type="button" data-member-back="soons">${esc(darabang)} 다락방</button><span>${esc(formatSoonLabel(soon) || '순 미지정')}</span></div><h4 class="personal-topic-heading">${esc(formatSoonLabel(soon) || '순 미지정')} 회원 ${selectedMembers.length}명</h4>${selectedMembers.map((member) => {
     const metadata = [member.email, member.phone ? phoneFormat(member.phone) : '', member.cohort && `${member.cohort}기`].filter(Boolean).join(' · ');
     const memberSoonOptions = [...(SOON_CHOICES[member.darabang] || []), ...(member.soon && !(SOON_CHOICES[member.darabang] || []).includes(member.soon) ? [member.soon] : [])];
-    return `<div class="admin-person-row admin-member-card" data-admin-member-row="${member.id}"><div class="admin-member-heading"><b>${esc(member.name || '이름 없는 기도자')}</b><small>${esc(metadata || '연락처 정보 없음')}</small><strong>누적 기도시간 ${fmt(adminMemberSeconds.get(member.id) || 0)}</strong></div><div class="admin-member-fields"><label>그룹<select class="field" data-admin-profile-field="group_name">${choiceOptions(GROUP_CHOICES, member.group_name, '그룹 선택')}</select></label><label>다락방<select class="field" data-admin-profile-field="darabang">${choiceOptions(DARABANG_CHOICES, member.darabang, '다락방 선택')}</select></label><label>순<select class="field" data-admin-profile-field="soon">${choiceOptions(memberSoonOptions, member.soon, '순 선택')}</select></label></div><div class="topic-actions"><button class="secondary" type="button" data-save-admin-member="${member.id}">회원정보 저장</button><button class="secondary" type="button" onclick="resetMemberPrayerTime('${member.id}')">누적시간 초기화</button></div></div>`;
+    const termHistory = [...(adminMemberTermSeconds.get(member.id) || new Map())]
+      .filter(([term, seconds]) => term !== currentPrayerTerm && seconds > 0)
+      .sort(([termA], [termB]) => termB.localeCompare(termA, 'ko', { numeric: true }))
+      .map(([term, seconds]) => `${term} ${fmt(seconds)}`).join(' · ');
+    return `<div class="admin-person-row admin-member-card" data-admin-member-row="${member.id}"><div class="admin-member-heading"><b>${esc(member.name || '이름 없는 기도자')}</b><small>${esc(metadata || '연락처 정보 없음')}</small><strong>${esc(currentPrayerTerm)} 누적 기도시간 ${fmt(adminMemberSeconds.get(member.id) || 0)}</strong></div>${termHistory ? `<small class="term-member-history">이전 텀 · ${esc(termHistory)}</small>` : ''}<div class="admin-member-fields"><label>그룹<select class="field" data-admin-profile-field="group_name">${choiceOptions(GROUP_CHOICES, member.group_name, '그룹 선택')}</select></label><label>다락방<select class="field" data-admin-profile-field="darabang">${choiceOptions(DARABANG_CHOICES, member.darabang, '다락방 선택')}</select></label><label>순<select class="field" data-admin-profile-field="soon">${choiceOptions(memberSoonOptions, member.soon, '순 선택')}</select></label></div><div class="topic-actions"><button class="secondary" type="button" data-save-admin-member="${member.id}">회원정보 저장</button></div></div>`;
   }).join('') || '<div class="empty">이 순에 등록된 회원이 없어요.</div>'}`;
 }
 
@@ -808,12 +819,11 @@ async function loadAdminData() {
   if (!historyEl || !personalEl) return;
   historyEl.innerHTML = '<div class="empty">불러오는 중…</div>';
   personalEl.innerHTML = '<div class="empty">불러오는 중…</div>';
-  const [{ data: history, error: historyError }, { data: topics, error: topicsError }, { data: members, error: memberError }, { data: sessions, error: sessionsError }, { data: activeRows, error: activeError }, topicTotalsResult] = await Promise.all([
+  const [{ data: history, error: historyError }, { data: topics, error: topicsError }, { data: members, error: memberError }, { data: termTotals, error: termTotalsError }, topicTotalsResult] = await Promise.all([
     supabase.from('room_prayer_topics').select('id,topic,title,content,created_at,created_by,status').order('created_at', { ascending: false }),
     supabase.from('personal_prayer_topics').select('id,user_id,content,created_at,response_content,responded_at').order('created_at', { ascending: false }),
     supabase.from('profiles').select('id,name,email,phone,cohort,group_name,darabang,soon').order('name'),
-    supabase.from('prayer_sessions').select('user_id,started_at,ended_at,duration_seconds'),
-    supabase.from('active_prayers').select('user_id,started_at'),
+    supabase.rpc('admin_prayer_term_totals'),
     supabase.rpc('shared_topic_prayer_totals')
   ]);
   if (!topicTotalsResult.error) { sharedPrayerTotals.clear(); (topicTotalsResult.data || []).forEach((row) => sharedPrayerTotals.set(row.topic_id, Number(row.total_seconds || 0))); }
@@ -823,22 +833,31 @@ async function loadAdminData() {
     renderAdminPrayerHistory();
   }
   const totalsEl = $('#adminPrayerTotals');
-  if (memberError || sessionsError || activeError) {
-    totalsEl.innerHTML = `<div class="empty">${esc((memberError || sessionsError || activeError).message)}</div>`;
+  if (memberError || termTotalsError) {
+    totalsEl.innerHTML = `<div class="empty">${esc((memberError || termTotalsError).message)}</div>`;
   } else {
     adminMembers = new Map((members || []).map((member) => [member.id, member]));
     const secondsByUser = new Map();
-    (sessions || []).filter((session) => session.ended_at).forEach((session) => {
-      secondsByUser.set(session.user_id, (secondsByUser.get(session.user_id) || 0) + Number(session.duration_seconds || 0));
-    });
-    (activeRows || []).forEach((session) => {
-      const seconds = Math.max(0, Math.floor((Date.now() - Date.parse(session.started_at)) / 1000));
-      secondsByUser.set(session.user_id, (secondsByUser.get(session.user_id) || 0) + seconds);
+    const secondsByTerm = new Map();
+    const secondsByUserTerm = new Map();
+    (termTotals || []).forEach(({ user_id: userId, term_name: termName, total_seconds: totalSeconds }) => {
+      const seconds = Number(totalSeconds || 0);
+      secondsByTerm.set(termName, (secondsByTerm.get(termName) || 0) + seconds);
+      if (!secondsByUserTerm.has(userId)) secondsByUserTerm.set(userId, new Map());
+      const memberTerms = secondsByUserTerm.get(userId);
+      memberTerms.set(termName, (memberTerms.get(termName) || 0) + seconds);
+      if (termName === currentPrayerTerm) secondsByUser.set(userId, (secondsByUser.get(userId) || 0) + seconds);
     });
     adminMemberList = members || [];
     adminMemberSeconds = secondsByUser;
+    adminMemberTermSeconds = secondsByUserTerm;
+    const previousTerms = [...secondsByTerm.entries()].filter(([term, seconds]) => term !== currentPrayerTerm && seconds > 0)
+      .sort(([termA], [termB]) => termB.localeCompare(termA, 'ko', { numeric: true }));
+    $('#adminTermHistory').innerHTML = previousTerms.length
+      ? `<strong>이전 텀 전체 기록</strong>${previousTerms.map(([term, seconds]) => `<div><span>${esc(term)}</span><b>${fmt(seconds)}</b></div>`).join('')}`
+      : '';
     const { data: globalSeconds, error: globalError } = await supabase.rpc('public_prayer_total_seconds');
-    $('#adminGlobalTotal').innerHTML = globalError ? '' : `전체 누적 기도시간 <strong>${fmt(Number(globalSeconds || 0))}</strong>`;
+    $('#adminGlobalTotal').innerHTML = globalError ? '' : `${esc(currentPrayerTerm)} 전체 누적 기도시간 <strong>${fmt(Number(globalSeconds || 0))}</strong>`;
     renderAdminMemberManagement();
   }
   if (topicsError) { personalEl.innerHTML = `<div class="empty">${esc(topicsError.message)}</div>`; return; }
@@ -876,7 +895,7 @@ function renderAdminPersonalTopics() {
       const metadata = [member.cohort && `${member.cohort}기`, formatSoonLabel(member.soon)].filter(Boolean).join(' · ');
       return `<article class="topic"><small>${esc(member.name || '이름 없는 기도자')}${metadata ? ` · ${esc(metadata)}` : ''} · ${esc(date)}</small>${esc(item.content)}${response}</article>`;
     }).join('');
-    personalEl.innerHTML = `<div class="personal-topic-breadcrumb"><button class="textbtn" data-personal-nav="all">모든 그룹 · 다락방</button><span>${esc(selectedGroup)} / ${esc(selectedDarabang)}</span><button class="secondary" data-personal-nav="darabang">다락방의 순 목록</button></div><h4 class="personal-topic-heading">${esc(selectedSoon.endsWith('순') || selectedSoon.includes('미지정') ? selectedSoon : `${selectedSoon}순`)}</h4>${topicMarkup || '<div class="empty">이 순에 등록된 기도제목이 없어요.</div>'}`;
+    personalEl.innerHTML = `<div class="personal-topic-breadcrumb"><button class="textbtn" data-personal-nav="all">모든 그룹 · 다락방</button><span>${esc(selectedGroup)} / ${esc(selectedDarabang)}</span><button class="secondary" data-personal-nav="darabang">다락방의 순 목록</button></div><h4 class="personal-topic-heading">${esc(formatSoonLabel(selectedSoon) || selectedSoon)}</h4>${topicMarkup || '<div class="empty">이 순에 등록된 기도제목이 없어요.</div>'}`;
     return;
   }
   if (selectedGroup && selectedDarabang) {
@@ -1119,7 +1138,7 @@ $('#adminPersonalTopics').addEventListener('click', (event) => {
   else return;
   renderAdminPersonalTopics();
 });
-$('#resetAllPrayerTime').addEventListener('click', () => window.resetAllPrayerTime());
+$('#startNextPrayerTerm').addEventListener('click', startNewPrayerTerm);
 $('#saveYoutubeLink').addEventListener('click', saveYouTubeLink);
 $('#audioFile').addEventListener('change', uploadAudio);
 $$('input[type="tel"]').forEach((input) => input.addEventListener('input', () => { input.value = phoneFormat(input.value); }));

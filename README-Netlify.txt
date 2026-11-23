@@ -55,7 +55,7 @@ SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (비밀키, 코드/GitHub�
 - 기도 응답 기능을 위해 personal_prayer_topics에 response_content / responded_at 열이 추가됩니다.
 - 공통 기도제목은 제목/내용과 게시 기간 중 전체 기도실에서 기록된 누적 기도시간을 표시합니다. 완료 항목은 기도실 아래쪽 이전 기도제목에 제목과 시간으로 남습니다.
 - 로그인한 사용자가 기도실에 들어오면 Supabase Realtime Presence로 이름을 즉시 공유하며, 화면이 열려 있는 동안 기도 중 상태도 5초 간격으로 갱신합니다.
-- 관리자는 전체 또는 회원별 누적 기도시간을 초기화할 수 있습니다. 초기화 시 완료된 기도기록은 삭제되고 진행 중인 기도는 초기화 시점부터 계산됩니다.
+- 전체·개인 기도시간은 현재 텀별로 집계되며, 새 텀을 시작해도 이전 텀 기록은 보존됩니다. 새 텀 전환은 기도 중인 회원이 없을 때 관리자가 할 수 있습니다.
 - 관리자 배경음악 설정은 업로드 음원 또는 개별 YouTube 영상 링크 중 하나를 사용합니다. YouTube 플레이어는 기도 시작 버튼을 눌러 재생합니다.
 - 개인 프로필, 기도기록, 기도제목은 RLS로 본인만 조회할 수 있고, 관리자 계정은 개인 기도제목과 이름/그룹 정보를 관리자 화면에서 확인할 수 있습니다. 현재 기도 중인 이름과 전체 누적 시간은 공개됩니다.
 - 관리자 음원은 40MB 이하 파일을 올리고, 사용 허가를 받은 음원만 이용하세요.
@@ -63,7 +63,7 @@ SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (비밀키, 코드/GitHub�
 
 최근 업데이트 안내
 - 기존 Supabase 프로젝트는 supabase-topic-prayer-time-update.sql을 SQL Editor에서 실행한 뒤 웹 파일을 배포합니다. 이 스크립트는 관리자 프로필 수정 권한, 공통 기도제목 공개 범위, 주제별 게시 기간 기록 및 누적시간 조회를 설정합니다. 기존 완료 주제의 정확한 게시/완료 시각은 데이터베이스에 저장되어 있지 않아 생성 시각부터 마이그레이션 시점까지로 추정합니다. 새 주제는 게시/완료 시각을 정확히 기록합니다.
-- 회원가입의 그룹/다락방/순은 지정된 목록에서 선택하며, 관리자 화면에서 기존 회원의 값을 수정할 수 있습니다.
+- 회원가입의 그룹/다락방/순은 지정된 목록에서 선택하며, 멘토·교역자 다락방은 각각 멘토·교역자 순 하나만 선택할 수 있습니다. 관리자 화면에서 기존 회원의 값을 수정할 수 있습니다.
 - 이메일 변경은 새 이메일 주소에서 인증 링크를 확인하면 완료됩니다. Supabase Dashboard의 Authentication > Sign In / Providers > Email에서 Secure email change를 끄면 새 이메일만 인증하도록 설정할 수 있습니다. Redirect URLs에 배포 사이트 주소가 등록되어 있어야 합니다.
 - 공통 기도제목별 누적시간은 해당 주제가 게시된 구간과 전체 회원의 기도 세션이 겹친 시간을 합산합니다. 기존 완료 주제의 과거 게시/완료 시각은 기록돼 있지 않아 생성 시각부터 이번 SQL 적용 시각까지로 추정하며, 이후 상태변경은 정확히 저장합니다. 동시에 여러 주제가 게시되어 있으면 같은 기도 세션 시간이 각 주제의 게시 기간 합계에 각각 포함될 수 있습니다.
 
@@ -73,4 +73,14 @@ SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (비밀키, 코드/GitHub�
 
 One-file SQL update for an existing project
 -------------------------------------------
-For an existing Supabase project, you can run supabase-existing-project-all-updates.sql once instead of running each incremental update file separately. Do not run supabase-setup.sql on an existing project. For a brand-new project, follow the Supabase first-install steps above.
+For an existing Supabase project, you can run supabase-existing-project-all-updates.sql once instead of running each incremental update file separately. This bundle includes the term-separated prayer-time update. Do not run supabase-setup.sql on an existing project. For a brand-new project, run supabase-setup.sql followed by supabase-prayer-term-update.sql.
+
+기도 텀 분리 기능 업데이트
+-------------------------
+기존 Supabase 프로젝트는 supabase-prayer-term-update.sql을 한 번 실행한 뒤 사이트 파일을 배포하세요. 기존 누적 기록은 27텀으로 보존되고, 이후 기도 세션마다 텀 이름을 저장합니다. 관리자 > 회원 관리에서 예를 들어 28텀을 입력해 새 텀을 시작하면 전체 및 개인별 새 텀 시간이 0부터 집계되며, 이전 텀 기록은 마이페이지와 관리자 회원 목록에 남습니다. 텀 전환은 진행 중인 기도가 모두 종료된 경우에만 가능합니다. 기도시간 초기화 버튼은 제거했습니다.
+
+새 Supabase 프로젝트도 supabase-setup.sql 실행 후 supabase-prayer-term-update.sql을 실행하고 사이트를 배포하세요.
+
+모바일 홈 화면 아이콘
+---------------------
+사이트 주소를 휴대폰 홈 화면에 추가하면 LINK 로고 아이콘을 사용합니다. iPhone에서는 Safari 공유 버튼 > 홈 화면에 추가, Android Chrome에서는 메뉴 > 홈 화면에 추가 또는 앱 설치를 선택하세요.
